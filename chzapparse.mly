@@ -5,10 +5,11 @@ open Ast
 %}
 
 %token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
-%token BWAND BWOR PLUS MINUS TIMES DIVIDE EXP MOD ASSIGN NOT
+%token BWAND BWOR PLUS MINUS TIMES DIVIDE EXP MOD NOT
+%token ASSIGN
 %token EQ NEQ LT LEQ GT GEQ AND OR
 %token NOELSE IF ELSE FOR WHILE CONTINUE BREAK
-%token INT UINT CHAR CONST FLOAT BOOL ARR FUNC
+%token INT UINT CHAR CONST FLOAT BOOL
 /* return, COMMA token */
 %token RETURN VOID TRUE FALSE
 %token COMMA LB TAB INDENT DEDENT
@@ -28,7 +29,7 @@ open Ast
 %left EQ NEQ
 %left GT GEQ LT LEQ
 %left PLUS MINUS
-%left TIMES DIVIDE
+%left TIMES DIVIDE MOD
 %right EXP
 %right NOT
 
@@ -149,7 +150,6 @@ stmt:
   | LBRACE stmt_list RBRACE                 { Block $2 }
   /* if (condition) { block1} else {block2} */
   /* if (condition) stmt else stmt */
-  | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
   | WHILE LPAREN expr RPAREN stmt           { While ($3, $5)  }
   | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt 
