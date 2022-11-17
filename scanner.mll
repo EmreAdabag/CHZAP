@@ -18,11 +18,11 @@ whitespace { token lexbuf }
 | ')' { RPAREN }
 | '{' { LBRACE }
 | '}' { RBRACE }
+| '[' { LBRACK }
+| ']' { RBRACK }
 | ';' { SEMI }
 | ':' { COLON }
 | ',' { COMMA }
-| '[' { LBRACK }
-| ']' { RBRACK }
 
 (* Operators *)
 | '+' { PLUS }
