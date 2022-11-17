@@ -4,12 +4,20 @@ int main() {
     int y;
     int x;
     float z;
+    bool k;
+    const int l;
 
     a = 3;
     y = 5 / 2.0;
     x = 5 * 2  + 1;
     z = x + y ; // int + float
     z = ( x + y ) * 2;
+    k = x < 5;
+    k = false;
+    k = true;
+    
+    
+    
 
 }
 // there must be a new line at the end of file

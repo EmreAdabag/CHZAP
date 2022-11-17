@@ -1,10 +1,12 @@
+
 (* Abstract Syntax Tree and functions for printing it *)
 
 type op = Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr
 
 type uop = Not
+type typ_const =  Int_const | Bool_const | Char_const | Float_const | Void_const  
+type typ = Int | Bool | Char | Float | Void | Arr of typ | Const of typ_const 
 
-type typ = Int | Bool | Char | Float | Void | Arr of typ
 
 type expr =
   | IntLit of int
@@ -98,13 +100,28 @@ let rec string_of_stmt = function
   | Continue -> "continue"
   | Break -> "break"
 
+
+
+let  string_of_const_typ = function
+Int_const -> "int"
+| Bool_const -> "bool"
+| Char_const -> "char"
+| Float_const -> "float"
+| Void_const -> "void"
+
+
 let rec string_of_typ = function
     Int -> "int"
   | Bool -> "bool"
   | Char -> "char"
   | Float -> "float"
   | Arr(t) -> string_of_typ t ^ "[]"
+  | Const(t) ->"const " ^ string_of_const_typ t 
   | Void -> "void"
+
+
+
+
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 

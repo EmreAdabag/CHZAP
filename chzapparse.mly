@@ -139,7 +139,16 @@ typ:
   | BOOL  { Bool  }
   | FLOAT { Float }
   | VOID  { Void }
+  | CHAR  { Char }
   | typ LBRACK RBRACK   { Arr($1) }
+  | CONST const_typ { Const($2) }
+
+const_typ:
+    INT   { Int_const   }
+  | BOOL  { Bool_const  }
+  | CHAR  { Char_const }
+  | FLOAT { Float_const }
+  | VOID  { Void_const }
 
 stmt_list:
   | /* nothing */ { [] }
