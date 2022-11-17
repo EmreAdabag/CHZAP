@@ -1,0 +1,11 @@
+/* CHZAP functions */
+
+int fff(int a, char b) {
+    x + 1;
+    b + 2;
+    return 1;
+}
+
+function ggg(a, b, c) {
+    blahblah;
+}
