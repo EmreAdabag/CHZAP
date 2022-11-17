@@ -21,8 +21,8 @@ whitespace { token lexbuf }
 | ';' { SEMI }
 | ':' { COLON }
 | ',' { COMMA }
-| "[" { LBRACK }
-| "]" { RBRACK }
+| '[' { LBRACK }
+| ']' { RBRACK }
 
 (* Operators *)
 | '+' { PLUS }
@@ -40,9 +40,9 @@ whitespace { token lexbuf }
 | ">=" { GEQ }
 | "&&" { AND }
 | "||" { OR }
-| "!" { NOT }
-| "&" { BWAND }
-| "|" { BWOR }
+| '!' { NOT }
+| '&' { BWAND }
+| '|' { BWOR }
 
 (* flow control *)
 | "if" { IF }
