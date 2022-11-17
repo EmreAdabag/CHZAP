@@ -27,6 +27,8 @@ whitespace { token lexbuf }
 | ',' { COMMA }
 | "[" { LBRACK }
 | "]" { RBRACK }
+| '{'' { LBRACE }
+| '}'  { RBRACE }
 
 (* Operators *)
 | '+' { PLUS }
