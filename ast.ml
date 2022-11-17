@@ -2,7 +2,10 @@
 
 type op = Add | Sub | Mul | Div | Equal | Neq | Less | And | Or
 
-type typ = Int | Bool
+type typ = Int | Bool | Float | Char | Void | Func
+
+(* int x: name binding *)
+type bind = Bind of typ * string
 
 type expr =
   | IntLit of int
@@ -15,17 +18,17 @@ type expr =
   | Call of string * expr list
 
 type stmt =
-  | Void
+  | VoidStmt
+  | Func of bind * bind list * stmt
   | Block of stmt list
   | Expr of expr
   | If of expr * stmt * stmt
   | While of expr * stmt
   (* return *)
   | Return of expr
+  | ReturnVoid
 
-(* int x: name binding *)
-type bind = typ * string
-
+(* 
 (* func_def: ret_typ fname formals locals body *)
 type func_def = {
   rtyp: typ;
@@ -33,7 +36,7 @@ type func_def = {
   formals: bind list;
   locals: bind list;
   body: stmt list;
-}
+} *)
 
 (* type program = bind list * func_def list *)
 type program = stmt list
@@ -50,6 +53,17 @@ let string_of_op = function
   | And -> "&&"
   | Or -> "||"
 
+  let string_of_typ = function
+  | Int -> "int"
+  | Float -> "float"
+  | Bool -> "bool"
+  | Char -> "char"
+  | Void -> "void"
+  | Func -> "func"
+
+let string_of_bind = function
+  | Bind(t, s) -> s ^ ": " ^ string_of_typ t
+
 let rec string_of_expr = function
   | IntLit(l) -> string_of_int l
   | FloatLit(l) -> string_of_float l
@@ -63,28 +77,28 @@ let rec string_of_expr = function
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
 
 let rec string_of_stmt = function
-  | Void -> ""
+  | VoidStmt -> "void;"
+  | Func(b, bl, s) -> 
+    string_of_bind b ^ " (" ^ String.concat ", " (List.map string_of_bind bl) ^ ")\n" ^ 
+    string_of_stmt s ^ "\n"
   | Block(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
+  | ReturnVoid -> "return void;\n"
   | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
                       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 
-let string_of_typ = function
-    Int -> "int"
-  | Bool -> "bool"
-
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 
-let string_of_fdecl fdecl =
+(* let string_of_fdecl fdecl =
   string_of_typ fdecl.rtyp ^ " " ^
   fdecl.fname ^ "(" ^ String.concat ", " (List.map snd fdecl.formals) ^
   ")\n{\n" ^
   String.concat "" (List.map string_of_vdecl fdecl.locals) ^
   String.concat "" (List.map string_of_stmt fdecl.body) ^
-  "}\n"
+  "}\n" *)
 
 (* let string_of_program (vars, funcs) =
   "\n\nParsed program: \n\n" ^

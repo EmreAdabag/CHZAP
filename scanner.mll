@@ -26,6 +26,8 @@ whitespace { token lexbuf }
 | ',' { COMMA }
 | "[" { LBRACK }
 | "]" { RBRACK }
+| "{" { LBRACE }
+| "}" { RBRACE }
 
 (* Operators *)
 | '+' { PLUS }
@@ -62,6 +64,13 @@ whitespace { token lexbuf }
 | "const" { CONST }
 | "float" { FLOAT }
 | "bool" { BOOL }
+| "function" { FUNC }
+
+(* misc *)
+| "return" { RETURN }
+| "void" { VOID } 
+| "true" { TRUE }
+| "false" { FALSE }
 
 (* literals *)
 | id as lit { ID(lit) }
@@ -69,12 +78,6 @@ whitespace { token lexbuf }
 | float as lit { FLOAT_LITERAL(float_of_string lit) }
 | char as lit { CHAR_LITERAL( String.get lit 1 ) }
 
-
-(* misc *)
-| "return" { RETURN }
-| "void" { VOID } 
-| "true" { TRUE }
-| "false" { FALSE }
 | eof    { EOF }
 
 

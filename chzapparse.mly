@@ -8,7 +8,7 @@ open Ast
 %token PLUS MINUS TIMES DIVIDE EXP MODULO ASSIGN
 %token EQ NEQ LT LEQ GT GEQ BWAND BWOR NOT AND OR
 %token IF ELSE FOR WHILE CONTINUE BREAK
-%token INT UINT CHAR CONST FLOAT BOOL
+%token INT UINT CHAR CONST FLOAT BOOL FUNC
 /* return, COMMA token */
 %token RETURN VOID TRUE FALSE
 %token COMMA LB TAB INDENT DEDENT
@@ -94,13 +94,39 @@ open Ast
 program:
   | stmt_list EOF { $1 }
 
+typ:
+  | INT { Int }
+  | BOOL { Bool }
+  | FLOAT { Float }
+  | CHAR { Char }
+  // | FUNC { Func }
+  | VOID { Void }
+
 stmt_list:
   | /* nothing */ { [] }
   | stmt stmt_list { $1 :: $2 }
 
+bind_opt:
+  | ID { Bind(Void, $1) }
+  | typ ID { Bind($1, $2) }
+
+formals_list:
+  | /* empty */ { [] }
+  | bind_opt { [$1] }
+  | bind_opt COMMA formals_list { $1 :: $3 }
+
+stmt_block:
+  | LBRACE stmt_list RBRACE { Block($2) }
+
 stmt:
-  | SEMI /* empty */ { Void }
+  // empty stmt
+  | SEMI { VoidStmt }
   | expr SEMI { Expr($1) }
+  // func def
+  | typ ID LPAREN formals_list RPAREN stmt_block { Func(Bind($1, $2), $4, $6) }
+  | FUNC ID LPAREN formals_list RPAREN stmt_block { Func(Bind(Void, $2), $4, $6) }
+  | RETURN expr SEMI { Return($2) }
+  | RETURN SEMI { ReturnVoid }
 
 expr:
   | INT_LITERAL { IntLit($1) }
