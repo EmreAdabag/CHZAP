@@ -29,12 +29,20 @@ let translate (globals, functions) =
   (* Get types from the context *)
   let i32_t      = L.i32_type    context
   and i8_t       = L.i8_type     context
+  and f64_t  = L.double_type context (* prob with floats *)
+  and void_t = L.void_type context
+  and char_t     = L.i8_type     context
   and i1_t       = L.i1_type     context in
 
   (* Return the LLVM type for a MicroC type *)
   let ltype_of_typ = function
       A.Int   -> i32_t
     | A.Bool  -> i1_t
+    | A.Float -> f64_t
+    | A.Void -> void_t 
+    | A.Char -> char_t
+    | A.Arr(_) -> void_t (*TODO*) 
+
   in
 
   (* Create a map of global variables after creating each *)
@@ -97,7 +105,7 @@ let translate (globals, functions) =
 
     (* Construct code for an expression; return its value *)
     let rec build_expr builder ((_, e) : sexpr) = match e with
-        SLiteral i  -> L.const_int i32_t i
+        SIntLit i  -> L.const_int i32_t i
       | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
       | SId s       -> L.build_load (lookup s) s builder
       | SAssign (s, e) -> let e' = build_expr builder e in
@@ -108,11 +116,20 @@ let translate (globals, functions) =
         (match op with
            A.Add     -> L.build_add
          | A.Sub     -> L.build_sub
+         | A.Mul   -> L.build_mul
+         | A.Div    -> L.build_sdiv (*TODO: type*)
+         | A.Mod    -> L.build_srem
+         | A.BWAnd -> L.build_and (*TODO: fix*)
+         | A.BWOr -> L.build_or (*TODO: fix*)
          | A.And     -> L.build_and
          | A.Or      -> L.build_or
-         | A.Equal   -> L.build_icmp L.Icmp.Eq
+         | A.Eq   -> L.build_icmp L.Icmp.Eq
          | A.Neq     -> L.build_icmp L.Icmp.Ne
          | A.Less    -> L.build_icmp L.Icmp.Slt
+         | A.Leq     -> L.build_icmp L.Icmp.Sle
+         | A.Greater -> L.build_icmp L.Icmp.Sgt
+         | A.Geq     -> L.build_icmp L.Icmp.Sge
+
         ) e1' e2' "tmp" builder
       | SCall ("print", [e]) ->
         L.build_call printf_func [| int_format_str ; (build_expr builder e) |]
@@ -122,6 +139,14 @@ let translate (globals, functions) =
         let llargs = List.rev (List.map (build_expr builder) (List.rev args)) in
         let result = f ^ "_result" in
         L.build_call fdef (Array.of_list llargs) result builder
+      | SNoexpr -> raise (Failure ("TODO"))
+      | SCharLit l -> raise (Failure ("TODO"))
+      | SFloatLit l -> raise (Failure ("TODO"))
+      | SArrLit l -> raise (Failure ("TODO"))
+      | SUnop(_, _) -> raise (Failure ("TODO"))
+      | SSubsription(_, _) -> raise (Failure ("TODO"))
+      
+      
     in
 
     (* LLVM insists each basic block end with exactly one "terminator"
@@ -170,8 +195,12 @@ let translate (globals, functions) =
 
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
         L.builder_at_end context end_bb
-
+      | SFor (e1, e2, e3, body) -> build_stmt builder
+	      ( SBlock [SExpr e1 ; SWhile (e2, SBlock [body ; SExpr e3]) ] )
+      | SContinue -> raise (Failure ("CodegenError: Continue has not been implemented for codegen"))
+      | SBreak -> raise (Failure ("CodegenError: Break has not been implemented for codegen"))
     in
+
     (* Build the code for each statement in the function *)
     let func_builder = build_stmt builder (SBlock fdecl.sbody) in
 

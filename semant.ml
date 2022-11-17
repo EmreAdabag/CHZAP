@@ -82,8 +82,11 @@ let check (globals, functions) =
 
     (* Return a semantically-checked expression, i.e., with a type *)
     let rec check_expr = function
-        Literal l -> (Int, SLiteral l)
+        IntLit l -> (Int, SIntLit l)
       | BoolLit l -> (Bool, SBoolLit l)
+      | CharLit l -> (Char, SCharLit l)
+      | FloatLit l -> (Float, SFloatLit l)
+      | ArrayLit l -> (Arr Int, SArrLit (List.map check_expr l)) (*TODO*)
       | Id var -> (type_of_identifier var, SId var)
       | Assign(var, e) as ex ->
         let lt = type_of_identifier var
@@ -93,6 +96,17 @@ let check (globals, functions) =
         in
         (check_assign lt rt err, SAssign(var, (rt, e')))
 
+      | Unop(op, e) -> 
+        let t, e' = check_expr e in 
+        let err = "illegal unary operator " ^ 
+                  string_of_uop op ^ string_of_typ t ^ " in " ^ 
+                  string_of_expr e
+        in
+        let ty = match op with
+          | Not when t = Bool -> t
+          | _ -> raise (Failure err)
+        in
+        (ty, SUnop(op, (t, e')))
       | Binop(e1, op, e2) as e ->
         let (t1, e1') = check_expr e1
         and (t2, e2') = check_expr e2 in
@@ -105,7 +119,7 @@ let check (globals, functions) =
           (* Determine expression type based on operator and operand types *)
           let t = match op with
               Add | Sub when t1 = Int -> Int
-            | Equal | Neq -> Bool
+            | Eq | Neq -> Bool
             | Less when t1 = Int -> Bool
             | And | Or when t1 = Bool -> Bool
             | _ -> raise (Failure err)
@@ -126,6 +140,10 @@ let check (globals, functions) =
           in
           let args' = List.map2 check_call fd.formals args
           in (fd.rtyp, SCall(fname, args'))
+      | Noexpr -> (Int, SNoexpr)
+      | Subsription(a, e) -> 
+        let (t', e') = check_expr e in
+        (Int, SSubsription(a, (Int, e'))) (* TODO *)
     in
 
     let check_bool_expr e =
@@ -149,6 +167,10 @@ let check (globals, functions) =
         SIf(check_bool_expr e, check_stmt st1, check_stmt st2)
       | While(e, st) ->
         SWhile(check_bool_expr e, check_stmt st)
+      | For(e1, e2, e3, st) ->
+        SFor(check_expr e1, check_expr e2, check_expr e3, check_stmt st)
+      | Continue -> SContinue
+      | Break -> SBreak
       | Return e ->
         let (t, e') = check_expr e in
         if t = func.rtyp then SReturn (t, e')
