@@ -6,11 +6,11 @@ int main() {
     float z;
 
     b = 2;
-    for (a = 0; a < 10 ; a = a + 1) {
+    roll (a = 0; a < 10 ; a = a + 1) {
       b = b + 1;
     }
     a = 0;
-    for (  a < 10  ) {
+    roll (  a < 10  ) {
       a = a + 1;
     }
 

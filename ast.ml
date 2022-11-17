@@ -93,8 +93,8 @@ let rec string_of_stmt = function
   | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
                       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
-  | For(e1, e2, e3, s) -> "for (" ^ string_of_expr e1 ^ "; " ^ string_of_expr e2 ^ "; " ^ string_of_expr e3 ^ ") " ^ string_of_stmt s
-  | For_1(e1, s) -> "for (" ^ string_of_expr e1  ^ ") " ^ string_of_stmt s
+  | For(e1, e2, e3, s) -> "roll (" ^ string_of_expr e1 ^ "; " ^ string_of_expr e2 ^ "; " ^ string_of_expr e3 ^ ") " ^ string_of_stmt s
+  | For_1(e1, s) -> "roll (" ^ string_of_expr e1  ^ ") " ^ string_of_stmt s
   | Continue -> "continue"
   | Break -> "break"
 
