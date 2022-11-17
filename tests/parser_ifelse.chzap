@@ -1,0 +1,14 @@
+/* if else for Chzap  + while */
+while (a != b) {
+    if (b < a)
+    { 
+      a = a - b;
+    }
+    else
+    { 
+      b = b - a;
+    }
+  }
+return a;
+
+// there must be a new line at the end of file

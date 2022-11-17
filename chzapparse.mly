@@ -7,7 +7,7 @@ open Ast
 %token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token PLUS MINUS TIMES DIVIDE EXP MOD ASSIGN
 %token EQ NEQ LT LEQ GT GEQ BWAND BWOR NOT AND OR
-%token IF ELSE FOR WHILE CONTINUE BREAK
+%token IF ELSE NOELSE FOR WHILE CONTINUE BREAK
 %token INT UINT CHAR CONST FLOAT BOOL
 /* return, COMMA token */
 %token RETURN VOID TRUE FALSE
@@ -105,11 +105,15 @@ stmt:
   | expr SEMI { Expr($1) }
   | LBRACE stmt_list RBRACE                 { Block $2 } 
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
+  | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
   | WHILE LPAREN expr RPAREN stmt           { While ($3, $5)  }
   | FOR LPAREN expr SEMI expr SEMI expr RPAREN stmt  { For ($3, $5, $7, $9)  }
   | BREAK SEMI      { Break }
   | CONTINUE SEMI   { Continue }
-
+  | RETURN expr_opt SEMI                        { Return $2      }
+expr_opt:
+  /* nothing */ { Noexpr }
+| expr { $1 }
 expr:
 //EQ+ NEQ+ LT+ LEQ GT GEQ BWAND BWOR NOT AND OR
   | INT_LITERAL { IntLit($1) }
