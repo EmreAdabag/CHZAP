@@ -1,12 +1,13 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
-type op = Add | Sub | Equal | Neq | Less | And | Or
+type op = Add | Sub | Mul | Div | Equal | Neq | Less | And | Or
 
 type typ = Int | Bool
 
 type expr =
-    Literal of int
+  | IntLit of int
   | BoolLit of bool
+  | FloatLit of float
   | Id of string
   | Binop of expr * op * expr
   | Assign of string * expr
@@ -14,7 +15,8 @@ type expr =
   | Call of string * expr list
 
 type stmt =
-    Block of stmt list
+  | Void
+  | Block of stmt list
   | Expr of expr
   | If of expr * stmt * stmt
   | While of expr * stmt
@@ -33,12 +35,15 @@ type func_def = {
   body: stmt list;
 }
 
-type program = bind list * func_def list
+(* type program = bind list * func_def list *)
+type program = stmt list
 
 (* Pretty-printing functions *)
 let string_of_op = function
     Add -> "+"
   | Sub -> "-"
+  | Mul -> "*"
+  | Div -> "/"
   | Equal -> "=="
   | Neq -> "!="
   | Less -> "<"
@@ -46,7 +51,8 @@ let string_of_op = function
   | Or -> "||"
 
 let rec string_of_expr = function
-    Literal(l) -> string_of_int l
+  | IntLit(l) -> string_of_int l
+  | FloatLit(l) -> string_of_float l
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
   | Id(s) -> s
@@ -57,7 +63,8 @@ let rec string_of_expr = function
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
 
 let rec string_of_stmt = function
-    Block(stmts) ->
+  | Void -> ""
+  | Block(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
@@ -79,7 +86,10 @@ let string_of_fdecl fdecl =
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
 
-let string_of_program (vars, funcs) =
+(* let string_of_program (vars, funcs) =
   "\n\nParsed program: \n\n" ^
   String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
-  String.concat "\n" (List.map string_of_fdecl funcs)
+  String.concat "\n" (List.map string_of_fdecl funcs) *)
+  let string_of_program stmts =
+    "\n\nParsed program: \n\n" ^ 
+    String.concat "\n" (List.map string_of_stmt stmts)
