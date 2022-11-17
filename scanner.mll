@@ -1,18 +1,23 @@
 (* Ocamllex scanner for MicroC *)
 
-{ open Microcparse }
+{ open Chzapparse }
+
 let alpha = ['a'-'z' 'A'-'Z']
 let digit = ['0'-'9']
 let id = alpha (alpha | digit | '_')*
-let char = ''' ( ascii | digit ) '''
+(* let char = ''' ( ascii | digit ) ''' *)
+let char = ''' ( alpha | digit ) '''
 let float = (digit+) ['.'] digit+
 let int = digit+
-let whitespace = [' ' '\t' '\r']
-let newline = '\n'
+let whitespace = [' ' '\r']
+let newline = ['\n']
+let indent = '\t'
 
 rule token = parse
 whitespace { token lexbuf }
-| newline { token lexbuf}
+(* | newline { token lexbuf} *)
+| newline { LB }
+| indent { INDENT }
 | "/*" { opencomment lexbuf }
 | "//" { comment lexbuf }
 | '(' { LPAREN }
@@ -60,6 +65,7 @@ whitespace { token lexbuf }
 | "bool" { BOOL }
 
 (* literals *)
+| id as lit { ID(lit) }
 | int as lit { INT_LITERAL(int_of_string lit) }
 | float as lit { FLOAT_LITERAL(float_of_string lit) }
 | char as lit { CHAR_LITERAL( String.get lit 1 ) }
