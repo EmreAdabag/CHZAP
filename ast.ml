@@ -2,7 +2,7 @@
 
 type op = Add | Sub | Mul | Div | Equal | Neq | Less | And | Or
 
-type typ = Int | Bool
+type typ = Int | Bool | Float | FuncType | Void | Arr
 
 type expr =
   | IntLit of int
