@@ -9,15 +9,14 @@ let id = alpha (alpha | digit | '_')*
 let char = ''' ( alpha | digit ) '''
 let float = (digit+) ['.'] digit+
 let int = digit+
-let whitespace = [' ' '\r']
+let whitespace = [' ' '\t' '\r']
 let newline = ['\n']
-let indent = '\t'
 
 rule token = parse
 whitespace { token lexbuf }
-(* | newline { token lexbuf} *)
-| newline { LB }
-| indent { INDENT }
+| newline { token lexbuf}
+(* | newline { LB }
+| indent { TAB } *)
 | "/*" { opencomment lexbuf }
 | "//" { comment lexbuf }
 | '(' { LPAREN }

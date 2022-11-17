@@ -11,7 +11,7 @@ open Ast
 %token INT UINT CHAR CONST FLOAT BOOL
 /* return, COMMA token */
 %token RETURN VOID TRUE FALSE
-%token COMMA LB INDENT DEINDENT
+%token COMMA LB TAB INDENT DEDENT
 %token <int> INT_LITERAL
 %token <float> FLOAT_LITERAL
 %token <char> CHAR_LITERAL
@@ -32,6 +32,65 @@ open Ast
 
 %%
 
+/* tokens */
+// return a list of tokens
+// ref: https://github.com/jacobaustin123/Coral.git
+
+// tokens:
+//   | LB { [LB] }
+//   | token_list LB { $1 @ [LB] }
+
+// token_list:
+//   | token { [$1] }
+//   | token token_list { $1 :: $2 }
+
+// token:
+//   | COLON { COLON }
+//   | INDENT { INDENT }
+//   | RETURN { RETURN }
+//   | NOT { NOT }
+//   | IF { IF }
+//   | ELSE { ELSE }
+//   | FOR { FOR }
+//   | WHILE { WHILE }
+//   | COMMA { COMMA }
+//   | NEQ { NEQ }
+//   | LT { LT }
+//   | GT { GT }
+//   | LEQ { LEQ }
+//   | GEQ { GEQ }
+//   | AND { AND }
+//   | CONTINUE { CONTINUE }
+//   | BREAK { BREAK }
+//   | OR { OR }
+//   | TRUE { TRUE }
+//   | FALSE { FALSE }
+//   | PLUS { PLUS }
+//   | MINUS { MINUS }
+//   | TIMES { TIMES }
+//   | DIVIDE { DIVIDE }
+//   | EXP { EXP }
+//   | LPAREN { LPAREN }
+//   | RPAREN { RPAREN }
+//   | LBRACK { LBRACK }
+//   | RBRACK { RBRACK }
+//   | LBRACE { LBRACE }
+//   | RBRACE { RBRACE }
+//   | EQ { EQ }
+//   | BOOL { BOOL }
+//   | INT { INT }
+//   | FLOAT { FLOAT }
+//   | INDENT { INDENT }
+//   | DEDENT { DEDENT }
+//   | ID { ID($1) }
+//   | FLOAT_LITERAL { FLOAT_LITERAL($1) }
+//   | INT_LITERAL { INT_LITERAL($1) }
+//   | BOOL_LITERAL { BOOL_LITERAL($1) }
+//   | CHAR_LITERAL { CHAR_LITERAL($1) }
+//   | EOF { EOF }
+
+/* programs */
+
 program:
   | stmt_list EOF { $1 }
 
@@ -40,8 +99,8 @@ stmt_list:
   | stmt stmt_list { $1 :: $2 }
 
 stmt:
-  | LB /* empty */ { Void }
-  | expr { Expr($1) }
+  | SEMI /* empty */ { Void }
+  | expr SEMI { Expr($1) }
 
 expr:
   | INT_LITERAL { IntLit($1) }
