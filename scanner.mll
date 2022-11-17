@@ -45,10 +45,11 @@ whitespace { token lexbuf }
 (* flow control *)
 | "if" { IF }
 | "else" { ELSE }
-| "for" { FOR }
+| "roll" { FOR }
 | "while" { WHILE }
 | "continue" { CONTINUE }
 | "break" { BREAK }
+(*| "function" { FUNC }  Reserved for lambda function *)
 | "return" { RETURN }
 
 (* types *)
@@ -67,7 +68,7 @@ whitespace { token lexbuf }
 | (alpha) (alpha | digit | '_')* as lit { ID(lit) }
 | digit+ as lit { INT_LITERAL(int_of_string lit) }
 | floatnumber as lit { FLOAT_LITERAL(float_of_string lit) }
-| "'" ( _ as c) "'" { CHAR_LITERAL(c) }
+| "'" ( _ as c) "'" as lit { CHAR_LITERAL(c) }
 
 
 | eof    { EOF }

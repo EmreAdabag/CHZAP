@@ -1,34 +1,34 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
-type op = Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr
+type op = Add | Sub | Mul | Div | Eq | Neq | Less | Greater | Leq |  Geq | And | Or | BWOr | BWAnd | Not | Mod
 
-type uop = Not
-
-type typ = Int | Bool | Char | Float | Void | Arr of typ
+type typ = Int | Bool  | Char | Float | Void | Arr of typ
 
 type expr =
   | IntLit of int
-  | BoolLit of bool
   | CharLit of char
+  | BoolLit of bool
   | FloatLit of float
   | ArrayLit of expr list
   | Id of string
   | Binop of expr * op * expr
-  | Unop of uop * expr
   | Assign of string * expr
   | Subsription of string * expr
+
   (* function call *)
   | Call of string * expr list
   | Noexpr
 
+
 type stmt =
+  | Void
   | Block of stmt list
   | Expr of expr
   | If of expr * stmt * stmt
   | For of expr * expr * expr * stmt 
   | While of expr * stmt
-  | Continue
   | Break
+  | Continue
   (* return *)
   | Return of expr
 
@@ -44,7 +44,8 @@ type func_def = {
   body: stmt list;
 }
 
-type program = bind list * func_def list
+(* type program = bind list * func_def list *)
+type program = stmt list
 
 (* Pretty-printing functions *)
 let string_of_op = function
@@ -52,30 +53,27 @@ let string_of_op = function
   | Sub -> "-"
   | Mul -> "*"
   | Div -> "/"
-  | Mod -> "%"
   | Eq -> "=="
   | Neq -> "!="
   | Less -> "<"
-  | Leq -> "<="
   | Greater -> ">"
-  | Geq -> ">="
   | And -> "&&"
   | Or -> "||"
-  | BWAnd -> "&"
+  | Leq -> "<="
+  | Geq -> ">="
   | BWOr -> "|"
-
-let string_of_uop = function
-   Not -> "!"
+  | BWAnd -> "&"
+  | Not ->  "!"
+  | Mod -> "%"
 
 let rec string_of_expr = function
   | IntLit(l) -> string_of_int l
   | FloatLit(l) -> string_of_float l
   | CharLit(l) -> Char.escaped l
+  | ArrayLit(el) -> "[" ^ String.concat "," (List.map string_of_expr el) ^ "]"
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
-  | ArrayLit(el) -> "[" ^ String.concat "," (List.map string_of_expr el) ^ "]"
   | Id(s) -> s
-  | Unop (o, e) -> string_of_uop o ^ string_of_expr e
   | Binop(e1, o, e2) ->
     string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
@@ -85,6 +83,7 @@ let rec string_of_expr = function
   | Noexpr -> ""
 
 let rec string_of_stmt = function
+  | Void -> ""
   | Block(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
@@ -92,12 +91,12 @@ let rec string_of_stmt = function
   | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
                       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
-  | For(e1, e2, e3, s) -> "for (" ^ string_of_expr e1 ^ "; " ^ string_of_expr e2 ^ "; " ^ string_of_expr e3 ^ ") " ^ string_of_stmt s
+  | For(e1, e2, e3, s) -> "roll (" ^ string_of_expr e1 ^";" ^ string_of_expr e2 ^";" ^ string_of_expr e3 ^ ")"  ^ string_of_stmt s 
   | Continue -> "continue"
   | Break -> "break"
 
 let rec string_of_typ = function
-    Int -> "int"
+  Int -> "int"
   | Bool -> "bool"
   | Char -> "char"
   | Float -> "float"
@@ -114,7 +113,10 @@ let string_of_fdecl fdecl =
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
 
-let string_of_program (vars, funcs) =
+(* let string_of_program (vars, funcs) =
   "\n\nParsed program: \n\n" ^
   String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
-  String.concat "\n" (List.map string_of_fdecl funcs)
+  String.concat "\n" (List.map string_of_fdecl funcs) *)
+  let string_of_program stmts =
+    "\n\nParsed program: \n\n" ^ 
+    String.concat "\n" (List.map string_of_stmt stmts)
