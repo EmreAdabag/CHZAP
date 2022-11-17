@@ -25,7 +25,7 @@ type stmt =
   | Block of stmt list
   | Expr of expr
   | If of expr * stmt * stmt
-  | For of expr * expr * expr * stmt
+  | For of expr * expr * expr * stmt 
   | While of expr * stmt
   | Continue
   | Break
@@ -94,7 +94,7 @@ let rec string_of_stmt = function
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
   | For(e1, e2, e3, s) -> "for (" ^ string_of_expr e1 ^ "; " ^ string_of_expr e2 ^ "; " ^ string_of_expr e3 ^ ") " ^ string_of_stmt s
   | Continue -> "continue"
-  | Break -> "braek"
+  | Break -> "break"
 
 let rec string_of_typ = function
     Int -> "int"

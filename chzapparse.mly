@@ -147,7 +147,7 @@ stmt_list:
 
 stmt:
   | expr SEMI { Expr($1) }
-  | LBRACE stmt_list RBRACE                 { Block $2 }
+  | LBRACE stmt_list RBRACE                 { Block $2 } 
   /* if (condition) { block1} else {block2} */
   /* if (condition) stmt else stmt */
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
@@ -164,6 +164,7 @@ expr_opt:
 | expr { $1 }
 
 expr:
+//EQ+ NEQ+ LT+ LEQ GT GEQ BWAND BWOR NOT AND OR
   | INT_LITERAL       { IntLit($1) }
   | BOOL_LITERAL      { BoolLit($1) }
   | FLOAT_LITERAL     { FloatLit($1) }
@@ -186,9 +187,11 @@ expr:
   | expr OR expr      { Binop($1, Or, $3) }
   | NOT expr          { Unop(Not, $2) }
   | ID ASSIGN expr    { Assign($1, $3) }
+   /* call */
   | ID LPAREN args_opt RPAREN { Call ($1, $3)  }
   | LPAREN expr RPAREN          { $2 }
 
+// possible fix of the args_opt issue?
 /* args_opt*/
 args_opt:
   /*nothing*/ { [] }
