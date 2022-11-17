@@ -13,6 +13,7 @@ int gcd(int a, int b) {
 int main() {
   int x;
   int y;
+  int i;
   a = 18;
   b = 9;
   x = 2;
@@ -21,5 +22,8 @@ int main() {
   print(gcd(3,15));
   print(gcd(99,121));
   print(gcd(a,b));
+  for (i=1; i<10; i = i+1) {
+    print(i);
+  }
   return 0;
 }
