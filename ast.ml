@@ -26,6 +26,7 @@ type stmt =
   | Expr of expr
   | If of expr * stmt * stmt
   | For of expr * expr * expr * stmt 
+  | For_1 of expr  * stmt 
   | While of expr * stmt
   | Continue
   | Break
@@ -93,6 +94,7 @@ let rec string_of_stmt = function
                       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
   | For(e1, e2, e3, s) -> "for (" ^ string_of_expr e1 ^ "; " ^ string_of_expr e2 ^ "; " ^ string_of_expr e3 ^ ") " ^ string_of_stmt s
+  | For_1(e1, s) -> "for (" ^ string_of_expr e1  ^ ") " ^ string_of_stmt s
   | Continue -> "continue"
   | Break -> "break"
 

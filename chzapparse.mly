@@ -154,6 +154,8 @@ stmt:
   | WHILE LPAREN expr RPAREN stmt           { While ($3, $5)  }
   | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt 
     { For($3, $5, $7, $9) }
+  | FOR LPAREN expr RPAREN stmt 
+    { For_1($3, $5) }
   | BREAK SEMI      { Break }
   | CONTINUE SEMI   { Continue }
   /* return */

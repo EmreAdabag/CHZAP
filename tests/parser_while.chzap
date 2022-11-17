@@ -1,15 +1,15 @@
 /* CHZAP exprs */
 int main() {
     int a;
-    int y;
+    int b;
     int x;
     float z;
 
     a = 3;
-    y = 5 / 2.0;
-    x = 5 * 2  + 1;
-    z = x + y ; // int + float
-    z = ( x + y ) * 2;
+    b = 2;
+    while (a <= b) {
+        a = a + 1;
+    }
 
 }
 // there must be a new line at the end of file
