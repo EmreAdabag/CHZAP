@@ -138,8 +138,7 @@ typ:
   | BOOL  { Bool  }
   | FLOAT { Float }
   | VOID  { Void }
-  | ARR   { Arr }
-  | FUNC  { FuncType }
+  | typ LBRACK RBRACK   { Arr($1) }
 
 stmt_list:
   | /* nothing */ { [] }
@@ -169,7 +168,7 @@ expr:
   | BOOL_LITERAL      { BoolLit($1) }
   | FLOAT_LITERAL     { FloatLit($1) }
   | CHAR_LITERAL      { CharLit($1) }
-  | LBRACK args_opt RBRACK { List($2) }
+  | LBRACK args_opt RBRACK { ArrayLit($2) }
   | ID LBRACK expr RBRACK  { Subsription($1, $3) }
   | ID                { Id($1) }
   | expr PLUS expr    { Binop($1, Add, $3) }
