@@ -1,0 +1,8 @@
+/* CHZAP exprs */
+
+a = 3
+y = 5 / 2.0
+x = 5 * 2 + 1
+z = x + y // int + float
+
+// there must be a new line at the end of file
