@@ -4,6 +4,8 @@ type op = Add | Sub | Mul | Div | Eq | Neq | Less | Greater | Leq |  Geq | And |
 
 type typ = Int | Bool  | Char | Float | Void | Arr of typ
 
+type uop = Not
+
 type expr =
   | IntLit of int
   | CharLit of char
@@ -65,7 +67,8 @@ let string_of_op = function
   | BWAnd -> "&"
   | Not ->  "!"
   | Mod -> "%"
-
+let string_of_uop = function
+  Not -> "!"
 let rec string_of_expr = function
   | IntLit(l) -> string_of_int l
   | FloatLit(l) -> string_of_float l

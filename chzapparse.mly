@@ -28,7 +28,9 @@ open Ast
 %left EQ NEQ
 %left GT GEQ LT LEQ
 %left PLUS MINUS
-%left TIMES DIVIDE
+%left TIMES DIVIDE MOD
+%right EXP
+%right NOT
 
 %%
 
