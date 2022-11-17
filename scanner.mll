@@ -21,8 +21,6 @@ whitespace { token lexbuf }
 | ';' { SEMI }
 | ':' { COLON }
 | ',' { COMMA }
-| "{" { LBRACE }
-| "}" { RBRACE }
 
 (* Operators *)
 | '+' { PLUS }
