@@ -1,7 +1,6 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
-type op = Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr
-
+type op = Add | Sub | Mul | Div | Eq | Neq | Less | Great | Less_eq |  Great_eq | And | Or | BWOr | BWAnd | Not 
 type uop = Not
 
 type typ = Int | Bool | Char | Float | Void | Arr of typ
@@ -25,7 +24,7 @@ type stmt =
   | Block of stmt list
   | Expr of expr
   | If of expr * stmt * stmt
-  | For of expr * expr * expr * stmt
+  | For of expr * expr * expr * stmt 
   | While of expr * stmt
   | Continue
   | Break
@@ -61,6 +60,11 @@ let string_of_op = function
   | Geq -> ">="
   | And -> "&&"
   | Or -> "||"
+  | Less_eq -> "<="
+  | Great_eq -> ">="
+  | BWOr -> "|"
+  | BWAnd -> "&"
+  | Not ->  "!"
   | BWAnd -> "&"
   | BWOr -> "|"
 
@@ -94,7 +98,7 @@ let rec string_of_stmt = function
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
   | For(e1, e2, e3, s) -> "for (" ^ string_of_expr e1 ^ "; " ^ string_of_expr e2 ^ "; " ^ string_of_expr e3 ^ ") " ^ string_of_stmt s
   | Continue -> "continue"
-  | Break -> "braek"
+  | Break -> "break"
 
 let rec string_of_typ = function
     Int -> "int"
