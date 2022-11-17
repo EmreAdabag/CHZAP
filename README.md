@@ -29,3 +29,17 @@ lli example.out
 - `microc.ml`: top-level file to test and run microc compiler
 - `example.mc`: a sample microc source code
 - `example.out`: a sample compiled code of example.mc
+
+
+# CHZAP  READ ME Starts here 
+
+to build the tester for the parser run the following command 
+
+```
+ocamlbuild test1.native
+```
+
+Then to test the program on the `tests/parser_exprs.chzap`, run 
+```
+cat tests/parser_exprs.chzap | ./test1.native
+```

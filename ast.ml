@@ -1,25 +1,36 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
-type op = Add | Sub | Mul | Div | Equal | Neq | Less | And | Or
+type op = Add | Sub | Mul | Div | Eq | Neq | Less | Greater | Leq |  Geq | And | Or | BWOr | BWAnd | Not | Mod
 
-type typ = Int | Bool | Float | FuncType | Void | Arr
+type typ = Int | Bool  | Char | Float | Void | Arr of typ
+
+type uop = Not
 
 type expr =
   | IntLit of int
+  | CharLit of char
   | BoolLit of bool
   | FloatLit of float
+  | ArrayLit of expr list
   | Id of string
   | Binop of expr * op * expr
   | Assign of string * expr
+  | Subsription of string * expr
+
   (* function call *)
   | Call of string * expr list
+  | Noexpr
+
 
 type stmt =
   | Void
   | Block of stmt list
   | Expr of expr
   | If of expr * stmt * stmt
+  | For of expr * expr * expr * stmt 
   | While of expr * stmt
+  | Break
+  | Continue
   (* return *)
   | Return of expr
 
@@ -44,15 +55,25 @@ let string_of_op = function
   | Sub -> "-"
   | Mul -> "*"
   | Div -> "/"
-  | Equal -> "=="
+  | Eq -> "=="
   | Neq -> "!="
   | Less -> "<"
+  | Greater -> ">"
   | And -> "&&"
   | Or -> "||"
-
+  | Leq -> "<="
+  | Geq -> ">="
+  | BWOr -> "|"
+  | BWAnd -> "&"
+  | Not ->  "!"
+  | Mod -> "%"
+let string_of_uop = function
+  Not -> "!"
 let rec string_of_expr = function
   | IntLit(l) -> string_of_int l
   | FloatLit(l) -> string_of_float l
+  | CharLit(l) -> Char.escaped l
+  | ArrayLit(el) -> "[" ^ String.concat "," (List.map string_of_expr el) ^ "]"
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
   | Id(s) -> s
@@ -61,6 +82,8 @@ let rec string_of_expr = function
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+  | Subsription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
+  | Noexpr -> ""
 
 let rec string_of_stmt = function
   | Void -> ""
@@ -71,10 +94,17 @@ let rec string_of_stmt = function
   | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
                       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+  | For(e1, e2, e3, s) -> "roll (" ^ string_of_expr e1 ^";" ^ string_of_expr e2 ^";" ^ string_of_expr e3 ^ ")"  ^ string_of_stmt s 
+  | Continue -> "continue"
+  | Break -> "break"
 
-let string_of_typ = function
-    Int -> "int"
+let rec string_of_typ = function
+  Int -> "int"
   | Bool -> "bool"
+  | Char -> "char"
+  | Float -> "float"
+  | Arr(t) -> string_of_typ t ^ "[]"
+  | Void -> "void"
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 

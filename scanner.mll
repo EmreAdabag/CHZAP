@@ -49,7 +49,7 @@ whitespace { token lexbuf }
 | "while" { WHILE }
 | "continue" { CONTINUE }
 | "break" { BREAK }
-| "function" { FUNC } (* Reserved for lambda function *)
+(*| "function" { FUNC }  Reserved for lambda function *)
 | "return" { RETURN }
 
 (* types *)
