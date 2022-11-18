@@ -82,7 +82,6 @@ vdecl:
 typ:
     INT   { Int  }
   | BOOL  { Bool }
-  | CHAR  { Char }
   | FLOAT { Float }
   | VOID  { Void }
   | typ LBRACK RBRACK   { Arr($1) }
@@ -132,6 +131,7 @@ expr:
   | expr PLUS expr    { Binop($1, Add, $3) }
   | expr MINUS expr   { Binop($1, Sub, $3) }
   | expr TIMES expr   { Binop($1, Mul, $3) }
+  | expr EXP expr     { Binop($1, Exp, $3) }
   | expr DIVIDE expr  { Binop($1, Div, $3) }
   | expr MOD expr     { Binop($1, Mod, $3) }
   | expr EQ expr      { Binop($1, Eq, $3) }

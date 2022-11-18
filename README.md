@@ -43,3 +43,7 @@ Then to test the program on the `tests/parser_exprs.chzap`, run
 ```
 cat tests/parser_exprs.chzap | ./test1.native
 ```
+## Debugging 
+To look for shift reduce conflict first run 
+```ocamlyacc -v chzapparse.mly```
+then look at the `chzapparse.out` file

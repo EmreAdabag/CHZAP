@@ -1,7 +1,7 @@
 
 (* Abstract Syntax Tree and functions for printing it *)
 
-type op = Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr
+type op = Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr | Exp
 
 type uop = Not
 type typ_const =  Int_const | Bool_const | Char_const | Float_const | Void_const  
@@ -53,6 +53,7 @@ let string_of_op = function
     Add -> "+"
   | Sub -> "-"
   | Mul -> "*"
+  | Exp -> "**"
   | Div -> "/"
   | Mod -> "%"
   | Eq -> "=="
