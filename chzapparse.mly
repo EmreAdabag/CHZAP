@@ -31,68 +31,13 @@ open Ast
 %left TIMES DIVIDE MOD
 %right EXP
 %right NOT
+%nonassoc NOELSE
+%nonassoc ELSE
 
 %start program
 %type <Ast.program> program
 
 %%
-
-/* tokens */
-// return a list of tokens
-// ref: https://github.com/jacobaustin123/Coral.git
-
-// tokens:
-//   | LB { [LB] }
-//   | token_list LB { $1 @ [LB] }
-
-// token_list:
-//   | token { [$1] }
-//   | token token_list { $1 :: $2 }
-
-// token:
-//   | COLON { COLON }
-//   | INDENT { INDENT }
-//   | RETURN { RETURN }
-//   | NOT { NOT }
-//   | IF { IF }
-//   | ELSE { ELSE }
-//   | FOR { FOR }
-//   | WHILE { WHILE }
-//   | COMMA { COMMA }
-//   | NEQ { NEQ }
-//   | LT { LT }
-//   | GT { GT }
-//   | LEQ { LEQ }
-//   | GEQ { GEQ }
-//   | AND { AND }
-//   | CONTINUE { CONTINUE }
-//   | BREAK { BREAK }
-//   | OR { OR }
-//   | TRUE { TRUE }
-//   | FALSE { FALSE }
-//   | PLUS { PLUS }
-//   | MINUS { MINUS }
-//   | TIMES { TIMES }
-//   | DIVIDE { DIVIDE }
-//   | EXP { EXP }
-//   | LPAREN { LPAREN }
-//   | RPAREN { RPAREN }
-//   | LBRACK { LBRACK }
-//   | RBRACK { RBRACK }
-//   | LBRACE { LBRACE }
-//   | RBRACE { RBRACE }
-//   | EQ { EQ }
-//   | BOOL { BOOL }
-//   | INT { INT }
-//   | FLOAT { FLOAT }
-//   | INDENT { INDENT }
-//   | DEDENT { DEDENT }
-//   | ID { ID($1) }
-//   | FLOAT_LITERAL { FLOAT_LITERAL($1) }
-//   | INT_LITERAL { INT_LITERAL($1) }
-//   | BOOL_LITERAL { BOOL_LITERAL($1) }
-//   | CHAR_LITERAL { CHAR_LITERAL($1) }
-//   | EOF { EOF }
 
 /* programs */
 
@@ -134,11 +79,20 @@ vdecl:
   typ ID { ($1, $2) }
 
 typ:
-    INT   { Int   }
-  | BOOL  { Bool  }
+    INT   { Int  }
+  | BOOL  { Bool }
+  | CHAR  { Char }
   | FLOAT { Float }
   | VOID  { Void }
   | typ LBRACK RBRACK   { Arr($1) }
+  | CONST const_typ { Const($2) }
+
+const_typ:
+    INT   { Int_const   }
+  | BOOL  { Bool_const  }
+  | CHAR  { Char_const }
+  | FLOAT { Float_const }
+  | VOID  { Void_const }
 
 // typ:
 //   | INT { Int }
@@ -172,11 +126,12 @@ stmt:
   // | typ ID LPAREN formals_list RPAREN stmt_block { Func(Bind($1, $2), $4, $6) }
   // | FUNC ID LPAREN formals_list RPAREN stmt_block { Func(Bind(Void, $2), $4, $6) }
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
+  | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
   | WHILE LPAREN expr RPAREN stmt           { While ($3, $5)  }
   | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt 
     { For($3, $5, $7, $9) }
   | FOR LPAREN expr RPAREN stmt 
-    { For_1($3, $5) }
+    { For(Noexpr, $3, Noexpr, $5) }
   | BREAK SEMI      { Break }
   | CONTINUE SEMI   { Continue }
   /* return */
@@ -198,6 +153,7 @@ expr:
   | expr PLUS expr    { Binop($1, Add, $3) }
   | expr MINUS expr   { Binop($1, Sub, $3) }
   | expr TIMES expr   { Binop($1, Mul, $3) }
+  | expr EXP expr     { Binop($1, Exp, $3) }
   | expr DIVIDE expr  { Binop($1, Div, $3) }
   | expr MOD expr     { Binop($1, Mod, $3) }
   | expr EQ expr      { Binop($1, Eq, $3) }

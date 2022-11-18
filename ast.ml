@@ -1,9 +1,12 @@
+
 (* Abstract Syntax Tree and functions for printing it *)
 
-type op = Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr
+type op = Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr | Exp
 type uop = Not
 
-type typ = Int | Bool | Char | Float | Void | Func | Arr of typ
+type typ_const =  Int_const | Bool_const | Char_const | Float_const | Void_const  
+type typ = Int | Bool | Char | Float | Void | Arr of typ | Const of typ_const 
+
 (* int x: name binding *)
 (* type bind = Bind of typ * string *)
 type bind = typ * string
@@ -31,7 +34,6 @@ type stmt =
   | Expr of expr
   | If of expr * stmt * stmt
   | For of expr * expr * expr * stmt 
-  | For_1 of expr  * stmt 
   | While of expr * stmt
   | Continue
   | Break
@@ -56,6 +58,7 @@ let string_of_op = function
     Add -> "+"
   | Sub -> "-"
   | Mul -> "*"
+  | Exp -> "**"
   | Div -> "/"
   | Mod -> "%"
   | Eq -> "=="
@@ -110,15 +113,45 @@ let rec string_of_stmt = function
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
+<<<<<<< HEAD
   (* | ReturnVoid -> "return void;\n" *)
   | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
                       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
+=======
+  | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^ 
+                      string_of_stmt s1 ^ ( if s2 = Block([]) then "" else "else\n" ^ string_of_stmt s2)
+>>>>>>> df21846dce052b723fa3df86d5c0887e24beb3e0
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
   | For(e1, e2, e3, s) -> "roll (" ^ string_of_expr e1 ^ "; " ^ string_of_expr e2 ^ "; " ^ string_of_expr e3 ^ ") " ^ string_of_stmt s
-  | For_1(e1, s) -> "roll (" ^ string_of_expr e1  ^ ") " ^ string_of_stmt s
-  | Continue -> "continue"
-  | Break -> "break"
+  | Continue -> "continue;"
+  | Break -> "break;"
 
+
+
+let  string_of_const_typ = function
+Int_const -> "int"
+| Bool_const -> "bool"
+| Char_const -> "char"
+| Float_const -> "float"
+| Void_const -> "void"
+
+
+<<<<<<< HEAD
+=======
+let rec string_of_typ = function
+    Int -> "int"
+  | Bool -> "bool"
+  | Char -> "char"
+  | Float -> "float"
+  | Arr(t) -> string_of_typ t ^ "[]"
+  | Const(t) ->"const " ^ string_of_const_typ t 
+  | Void -> "void"
+
+
+
+
+
+>>>>>>> df21846dce052b723fa3df86d5c0887e24beb3e0
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 
 let string_of_fdecl fdecl =

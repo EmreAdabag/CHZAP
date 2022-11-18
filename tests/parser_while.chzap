@@ -10,6 +10,18 @@ int main() {
     while (a <= b) {
         a = a + 1;
     }
+    while (a <= b) {
+        if (a > 3)
+        {
+            continue;
+        }
+        a = a + 1;
+        if (a == 3)
+        {
+            break;
+        }
+       
+    }
 
 }
 // there must be a new line at the end of file

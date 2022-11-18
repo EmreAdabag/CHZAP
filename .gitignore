@@ -13,3 +13,4 @@ _build/
 
 # output
 *.out
+*.output
