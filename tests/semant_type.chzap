@@ -2,12 +2,15 @@ int main() {
     int a;
     char b;
     float c;
-
+    int[] d;
+     
     a = 1;
     b = 'c';
     c = 0.4;
+    d = [2,3,4,5];
+
 
     c = c - a;
     c = c ** 2;
-    
+
 }
