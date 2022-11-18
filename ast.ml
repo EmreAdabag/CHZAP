@@ -27,9 +27,7 @@ type stmt =
   | Block of stmt list
   | Expr of expr
   | If of expr * stmt * stmt
-  | If_noelse of expr * stmt
   | For of expr * expr * expr * stmt 
-  | For_1 of expr  * stmt 
   | While of expr * stmt
   | Continue
   | Break
@@ -93,13 +91,10 @@ let rec string_of_stmt = function
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
-  | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
-                      string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
-  | If_noelse(e,s1) ->  "if (" ^ string_of_expr e ^ ")\n" ^
-      string_of_stmt s1 
+  | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^ 
+                      string_of_stmt s1 ^ ( if s2 = Block([]) then "" else "else\n" ^ string_of_stmt s2)
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
   | For(e1, e2, e3, s) -> "roll (" ^ string_of_expr e1 ^ "; " ^ string_of_expr e2 ^ "; " ^ string_of_expr e3 ^ ") " ^ string_of_stmt s
-  | For_1(e1, s) -> "roll (" ^ string_of_expr e1  ^ ") " ^ string_of_stmt s
   | Continue -> "continue;"
   | Break -> "break;"
 
