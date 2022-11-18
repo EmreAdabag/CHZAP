@@ -5,8 +5,7 @@ open Ast
 %}
 
 %token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK ARROW
-%token BWAND BWOR PLUS MINUS TIMES DIVIDE EXP MOD NOT
-%token ASSIGN
+%token BWAND BWOR PLUS MINUS TIMES DIVIDE EXP MOD NOT ASSIGN
 %token EQ NEQ LT LEQ GT GEQ AND OR
 %token NOELSE IF ELSE FOR WHILE CONTINUE BREAK
 %token INT UINT CHAR CONST FLOAT BOOL FUNC
@@ -92,6 +91,7 @@ vdecl_list:
 /* int x */
 vdecl:
   | typ ID { ($1, $2) }
+//  | typ ID ASSIGN expr { ($1, $2) }
 
 typ_no_arr:
   | INT   { Int  }
