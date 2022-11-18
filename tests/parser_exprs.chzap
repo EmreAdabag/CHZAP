@@ -1,19 +1,24 @@
 /* CHZAP exprs */
-
 int main() {
     int a;
     int y;
     int x;
-    char c;
     float z;
+    bool k;
+    const int l;
+    char c;
 
     a = 3;
     y = 5 / 2.0;
-    x = 5 * 2 + 1;
-    z = x + y; // int + float
-    z = (x + y) * 2;
+    x = 5 * 2  + 1;
+    z = x + y ; // int + float
+    z = ( x + y ) * 2;
+    k = x < 5;
+    k = false;
+    k = true;
     c = 'c';
+    
+    
+    
 }
-
-
 // there must be a new line at the end of file

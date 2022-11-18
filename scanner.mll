@@ -45,7 +45,7 @@ whitespace { token lexbuf }
 (* flow control *)
 | "if" { IF }
 | "else" { ELSE }
-| "for" { FOR }
+| "roll" { FOR }
 | "while" { WHILE }
 | "continue" { CONTINUE }
 | "break" { BREAK }
