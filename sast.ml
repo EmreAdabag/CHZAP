@@ -50,7 +50,7 @@ let rec string_of_sexpr (t, e) =
       | SBoolLit(false) -> "false"
       | SCharLit(l) -> Char.escaped l
       | SFloatLit(l) -> string_of_float l
-      | SArrLit(l) -> "TODO SArrLit"
+      | SArrLit(l) -> "[" ^ String.concat "," (List.map string_of_sexpr l) ^ "]"
       | SId(s) -> s
       | SUnop(o, e) -> "TODO SUnop"
       | SBinop(e1, o, e2) ->
@@ -60,8 +60,9 @@ let rec string_of_sexpr (t, e) =
           f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
       | SSubsription(a, e) -> a ^ "[" ^ string_of_sexpr e ^ "]" 
       | SNoexpr -> ""
-  )
+  ) ^ ")"
       
+
 
 let rec string_of_sstmt = function
     SBlock(stmts) ->
