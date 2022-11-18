@@ -1,11 +1,37 @@
 /* CHZAP functions */
 
-int fff(int a, char b) {
-    x + 1;
-    b + 2;
-    return 1;
+int add(int a, int b) {
+    return f(a, b);
 }
 
-function ggg(a, b, c) {
-    blahblah;
+int add(int a, int b, function(int, int) -> int f) {
+    return f(a, b);
 }
+
+function(void) -> int somefunc;
+
+int main() {
+    int a;
+    int y;
+    int x;
+    float z;
+    bool k;
+    const int l;
+    char c;
+    int[] arr;
+    function(int, int) -> int f;
+
+    a = 3;
+    y = 5 / 2.0;
+    x = 5 * 2  + 1;
+    z = x + y ; // int + float
+    z = ( x + y ) * 2;
+    k = x < 5;
+    k = false;
+    k = true;
+    c = 'c';
+    j = a + y + x;
+    // function(int a, int b) -> int { return a + b; }
+    // s = add(a, b, function(int x, int y) -> { return x + y; });
+}
+// there must be a new line at the end of file
