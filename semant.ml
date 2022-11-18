@@ -81,13 +81,7 @@ let check (globals, functions) =
       try StringMap.find s symbols
       with Not_found -> raise (Failure ("undeclared identifier " ^ s))
     in
-(* 
-    let check_arr l = (*TODO*)
-      (Int, l)
-    in 
 
-    let (t, l') = check_arr(l) in
-    (Arr t, SArrLit (List.map check_expr l')) *)
 
     (* Return a semantically-checked expression, i.e., with a type *)
     let rec check_expr = function
