@@ -1,10 +1,14 @@
 /* CHZAP exprs */
 
-a = 1;
-b = 2;
-while (a <= b) {
-    a = a + 1;
+int main() {
+    int a;
+    int b;
+    
+    a = 1;
+    b = 2;
+    while (a <= b) {
+        a = a + 1;
+    }
 }
-;
 
 // there must be a new line at the end of file
