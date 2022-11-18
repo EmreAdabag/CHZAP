@@ -82,7 +82,6 @@ vdecl:
 typ:
     INT   { Int  }
   | BOOL  { Bool }
-  | CHAR  { Char }
   | FLOAT { Float }
   | VOID  { Void }
   | typ LBRACK RBRACK   { Arr($1) }

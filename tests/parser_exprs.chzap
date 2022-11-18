@@ -17,6 +17,7 @@ int main() {
     k = false;
     k = true;
     c = 'c';
+    j = a + y + x;
     
     
     
