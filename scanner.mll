@@ -45,7 +45,7 @@ whitespace { token lexbuf }
 (* flow control *)
 | "if" { IF }
 | "else" { ELSE }
-| "for" { FOR }
+| "roll" { FOR }
 | "while" { WHILE }
 | "continue" { CONTINUE }
 | "break" { BREAK }
@@ -71,7 +71,7 @@ whitespace { token lexbuf }
 
 
 | eof    { EOF }
-| _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
+| _ as c { raise (Failure("illegal character " ^ Char.escaped c)) }
 
 
 and multi_comment level = parse

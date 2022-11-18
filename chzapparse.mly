@@ -32,68 +32,13 @@ open Ast
 %left TIMES DIVIDE MOD
 %right EXP
 %right NOT
+%nonassoc NOELSE
+%nonassoc ELSE
 
 %start program
 %type <Ast.program> program
 
 %%
-
-/* tokens */
-// return a list of tokens
-// ref: https://github.com/jacobaustin123/Coral.git
-
-// tokens:
-//   | LB { [LB] }
-//   | token_list LB { $1 @ [LB] }
-
-// token_list:
-//   | token { [$1] }
-//   | token token_list { $1 :: $2 }
-
-// token:
-//   | COLON { COLON }
-//   | INDENT { INDENT }
-//   | RETURN { RETURN }
-//   | NOT { NOT }
-//   | IF { IF }
-//   | ELSE { ELSE }
-//   | FOR { FOR }
-//   | WHILE { WHILE }
-//   | COMMA { COMMA }
-//   | NEQ { NEQ }
-//   | LT { LT }
-//   | GT { GT }
-//   | LEQ { LEQ }
-//   | GEQ { GEQ }
-//   | AND { AND }
-//   | CONTINUE { CONTINUE }
-//   | BREAK { BREAK }
-//   | OR { OR }
-//   | TRUE { TRUE }
-//   | FALSE { FALSE }
-//   | PLUS { PLUS }
-//   | MINUS { MINUS }
-//   | TIMES { TIMES }
-//   | DIVIDE { DIVIDE }
-//   | EXP { EXP }
-//   | LPAREN { LPAREN }
-//   | RPAREN { RPAREN }
-//   | LBRACK { LBRACK }
-//   | RBRACK { RBRACK }
-//   | LBRACE { LBRACE }
-//   | RBRACE { RBRACE }
-//   | EQ { EQ }
-//   | BOOL { BOOL }
-//   | INT { INT }
-//   | FLOAT { FLOAT }
-//   | INDENT { INDENT }
-//   | DEDENT { DEDENT }
-//   | ID { ID($1) }
-//   | FLOAT_LITERAL { FLOAT_LITERAL($1) }
-//   | INT_LITERAL { INT_LITERAL($1) }
-//   | BOOL_LITERAL { BOOL_LITERAL($1) }
-//   | CHAR_LITERAL { CHAR_LITERAL($1) }
-//   | EOF { EOF }
 
 /* programs */
 
@@ -135,11 +80,20 @@ vdecl:
   typ ID { ($1, $2) }
 
 typ:
-    INT   { Int   }
-  | BOOL  { Bool  }
+    INT   { Int  }
+  | BOOL  { Bool }
+  | CHAR  { Char }
   | FLOAT { Float }
   | VOID  { Void }
   | typ LBRACK RBRACK   { Arr($1) }
+  | CONST const_typ { Const($2) }
+
+const_typ:
+    INT   { Int_const   }
+  | BOOL  { Bool_const  }
+  | CHAR  { Char_const }
+  | FLOAT { Float_const }
+  | VOID  { Void_const }
 
 stmt_list:
   | /* nothing */ { [] }
@@ -151,9 +105,12 @@ stmt:
   /* if (condition) { block1} else {block2} */
   /* if (condition) stmt else stmt */
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
+  | IF LPAREN expr RPAREN stmt %prec NOELSE { If_noelse($3, $5) }
   | WHILE LPAREN expr RPAREN stmt           { While ($3, $5)  }
   | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt 
     { For($3, $5, $7, $9) }
+  | FOR LPAREN expr RPAREN stmt 
+    { For_1($3, $5) }
   | BREAK SEMI      { Break }
   | CONTINUE SEMI   { Continue }
   /* return */
