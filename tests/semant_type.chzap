@@ -1,0 +1,13 @@
+int main() {
+    int a;
+    char b;
+    float c;
+
+    a = 1;
+    b = 'c';
+    c = 0.4;
+
+    c = c - a;
+    c = c ** 2;
+    
+}

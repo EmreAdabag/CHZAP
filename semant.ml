@@ -80,13 +80,19 @@ let check (globals, functions) =
       with Not_found -> raise (Failure ("undeclared identifier " ^ s))
     in
 
+    let check_arr l = (*TODO*)
+      (Int, l)
+    in 
+
     (* Return a semantically-checked expression, i.e., with a type *)
     let rec check_expr = function
         IntLit l -> (Int, SIntLit l)
       | BoolLit l -> (Bool, SBoolLit l)
       | CharLit l -> (Char, SCharLit l)
       | FloatLit l -> (Float, SFloatLit l)
-      | ArrayLit l -> (Arr Int, SArrLit (List.map check_expr l)) (*TODO*)
+      | ArrayLit l -> 
+        let (t, l') = check_arr(l) in
+        (Arr t, SArrLit (List.map check_expr l'))
       | Id var -> (type_of_identifier var, SId var)
       | Assign(var, e) as ex ->
         let lt = type_of_identifier var
@@ -118,14 +124,22 @@ let check (globals, functions) =
         if t1 = t2 then
           (* Determine expression type based on operator and operand types *)
           let t = match op with
-              Add | Sub when t1 = Int -> Int
-            | Eq | Neq -> Bool
-            | Less when t1 = Int -> Bool
+              Add | Sub | Mul | Div | Mod | BWAnd | BWOr | Exp when t1 = Int -> Int
+            | Add | Sub | Mul | Div when t1 = Float -> Float
+            | Eq | Neq | Less | Greater | Geq | Leq when t1 = Int || t1 = Float || t1 = Bool -> Bool
             | And | Or when t1 = Bool -> Bool
             | _ -> raise (Failure err)
           in
           (t, SBinop((t1, e1'), op, (t2, e2')))
-        else raise (Failure err)
+        else
+          let t = match op with
+            Add | Sub | Mul | Div | Exp when t1 = Float && t2 = Int -> Float
+            | Add | Sub | Mul | Div when t1 = Int && t2 = Float -> Float
+            | Eq | Neq | Less | Greater | Geq | Leq when 
+              (t1 = Int || t1 = Float || t1 = Bool) && (t2 = Int || t2 = Float || t2 = Bool) -> Bool
+            | _ -> raise (Failure err)
+          in
+          (t, SBinop((t1, e1'), op, (t2, e2')))
       | Call(fname, args) as call ->
         let fd = find_func fname in
         let param_length = List.length fd.formals in

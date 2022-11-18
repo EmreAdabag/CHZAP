@@ -42,7 +42,7 @@ let translate (globals, functions) =
     | A.Void -> void_t 
     | A.Char -> char_t
     | A.Arr(_) -> void_t (*TODO*) 
-
+    | A.Const(_) -> void_t (*TODO*)
   in
 
   (* Create a map of global variables after creating each *)
@@ -117,6 +117,7 @@ let translate (globals, functions) =
            A.Add     -> L.build_add
          | A.Sub     -> L.build_sub
          | A.Mul   -> L.build_mul
+         | A.Exp      -> L.build_mul (*TODO: fix*)
          | A.Div    -> L.build_sdiv (*TODO: type*)
          | A.Mod    -> L.build_srem
          | A.BWAnd -> L.build_and (*TODO: fix*)
