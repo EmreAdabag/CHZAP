@@ -50,8 +50,8 @@ whitespace { token lexbuf }
 | "continue" { CONTINUE }
 | "break" { BREAK }
 | "return" { RETURN }
-| "true" { TRUE }
-| "false" { FALSE }
+(* | "true" { TRUE }
+| "false" { FALSE } *)
 
 (* types *)
 | "bool" { BOOL }
