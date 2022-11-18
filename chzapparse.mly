@@ -4,7 +4,7 @@
 open Ast
 %}
 
-%token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
+%token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK ARROW
 %token BWAND BWOR PLUS MINUS TIMES DIVIDE EXP MOD NOT
 %token ASSIGN
 %token EQ NEQ LT LEQ GT GEQ AND OR
@@ -44,7 +44,7 @@ open Ast
 /* programs */
 
 program:
-  decls EOF { $1}
+  decls EOF { $1 }
 
 decls:
    /* nothing */ { ([], [])               }
@@ -52,47 +52,72 @@ decls:
  | fdecl decls { (fst $2, ($1 :: snd $2)) }
 
 fdecl:
-  vdecl LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-  // {
-  //   {
-  //     rtyp = fst $1;
-  //     fname = snd $1;
-  //     formals = $3;
-  //     locals = $6;
-  //     body = $7
-  //   }
-  //   return func_typ * string like a variable
-  // }
-  { FuncTyp(fst $1, snd $1, $3, $6, $7) }
+  | vdecl LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+    {{
+        ftyp = (fst $1, List.map fst $3); 
+        rtyp = fst $1;
+        fname = snd $1; 
+        formals = $3; 
+        locals = $6; 
+        body = $7;
+    }}
+  // | vdecl LPAREN formals_opt RPAREN LBRACE decls RBRACE
+  //   {{
+  //       ftyp = (fst $1, List.map fst $3); 
+  //       rtyp = fst $1;
+  //       fname = snd $1; 
+  //       formals = $3; 
+  //       locals = fst $6; 
+  //       body = List.map stmt_of_fdecl (snd $6);
+  //   }}
 
 /* formals_opt */
 formals_opt:
-  /*nothing*/ { [] }
+  | /*nothing*/ { [] }
+  // | VOID { [] }
   | formals_list { $1 }
 
 formals_list:
-  vdecl { [$1] }
+  | vdecl { [$1] }
   | vdecl COMMA formals_list { $1::$3 }
 
 vdecl_list:
-  /*nothing*/ { [] }
-  | vdecl SEMI vdecl_list  {  $1 :: $3 }
+  | /*nothing*/ { [] }
+  // | vdecl_no_empty { $1 }
+  | vdecl SEMI vdecl_list  { $1 :: $3 }
+
+// vdecl_no_empty:
+//   | vdecl SEMI vdecl_list  { $1 :: $3 }
 
 /* int x */
 vdecl:
-  typ ID { ($1, $2) }
+  | typ ID { ($1, $2) }
 
-typ:
-    INT   { Int  }
+typ_no_arr:
+  | INT   { Int  }
   | BOOL  { Bool }
   | CHAR  { Char }
   | FLOAT { Float }
   | VOID  { Void }
-  | typ LBRACK RBRACK   { Arr($1) }
   | CONST const_typ { Const($2) }
+  // | ftyp { Func($1) }
+
+typ:
+  | typ_no_arr { $1 }
+  | typ LBRACK RBRACK   { Arr($1) }
+  // | typ FUNC LPAREN typ_list RPAREN { ($1, $4) }
+  // | FUNC LPAREN RPAREN ARROW typ_no_arr { Func($5, []) }
+  // | FUNC LPAREN typ_no_arr RPAREN ARROW typ_no_arr { Func($6, [$3]) }
+  | FUNC LPAREN typ_list RPAREN ARROW typ_no_arr { Func($6, $3) }
+
+typ_list:
+  // | /* empty list */ { [] }
+  // | { [] }
+  | typ_no_arr { [$1] }
+  | typ_no_arr COMMA typ_list { $1 :: $3 }
 
 const_typ:
-    INT   { Int_const   }
+  | INT   { Int_const   }
   | BOOL  { Bool_const  }
   | CHAR  { Char_const }
   | FLOAT { Float_const }
@@ -142,8 +167,8 @@ stmt:
   | RETURN expr_opt SEMI                        { Return $2      }
 
 expr_opt:
-  /* nothing */ { Noexpr }
-| expr { $1 }
+  | /* nothing */ { Noexpr }
+  | expr { $1 }
 
 expr:
 //EQ+ NEQ+ LT+ LEQ GT GEQ BWAND BWOR NOT AND OR
@@ -173,13 +198,23 @@ expr:
   | ID ASSIGN expr    { Assign($1, $3) }
    /* call */
   | ID LPAREN args_opt RPAREN { Call ($1, $3)  }
+  /* anonymous function definition */
+  // | FUNC LPAREN formals_opt RPAREN ARROW typ LBRACE vdecl_list stmt_list RBRACE
+  //   { FuncDef({
+  //       ftyp = ($6, List.map fst $3); 
+  //       rtyp = $6; 
+  //       fname = "_anonymous"; 
+  //       formals = $3; 
+  //       locals = $8; 
+  //       body = $9;
+  //   }) }
 
 // possible fix of the args_opt issue?
 /* args_opt*/
 args_opt:
-  /*nothing*/ { [] }
+  | /*nothing*/ { [] }
   | args { $1 }
 
 args:
-  expr  { [$1] }
+  | expr  { [$1] }
   | expr COMMA args { $1::$3 }

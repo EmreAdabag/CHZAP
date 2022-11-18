@@ -21,6 +21,7 @@ whitespace { token lexbuf }
 | ';' { SEMI }
 | ':' { COLON }
 | ',' { COMMA }
+| "->" { ARROW }
 
 (* Operators *)
 | '+' { PLUS }
@@ -34,7 +35,7 @@ whitespace { token lexbuf }
 | "!=" { NEQ }
 | '<' { LT }
 | "<=" { LEQ }
-| ">" { GT }
+| '>' { GT }
 | ">=" { GEQ }
 | "&&" { AND }
 | "||" { OR }

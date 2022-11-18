@@ -2,18 +2,22 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
 type op = 
-  | Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr | Exp
+  Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr | Exp
 type uop = Not
 
 type typ_const =  Int_const | Bool_const | Char_const | Float_const | Void_const  
-type func_typ = FuncTyp of typ * string * bind list * bind list * stmt list
+type func_typ = typ * typ list
 and typ = 
-  | Int | Bool | Char | Float | Void | Arr of typ | Const of typ_const | Func of func_typ
+  | Int | Bool | Char | Float | Void 
+  | Arr of typ 
+  | Const of typ_const 
+  | Func of func_typ
 
 (* int x: name binding *)
 (* type bind = Bind of typ * string *)
-and bind = typ * string
-
+type bind = typ * string
+(* int f() { ... }: function binding *)
+(* and fbind = func_typ * bind list * stmt list * string *)
 
 and expr =
   | IntLit of int
@@ -28,6 +32,7 @@ and expr =
   | Subsription of string * expr
   (* function call *)
   | Call of string * expr list
+  (* | FuncDef of func_def *)
   | Noexpr
 
 and stmt =
@@ -43,9 +48,20 @@ and stmt =
   (* return *)
   | Return of expr
   (* | ReturnVoid *)
+  (* | FuncDef of func_def *)
 
 (* func_def: ret_typ fname formals locals body *)
-type func_def = {
+(* type func_def = {
+  rtyp: typ;
+  fname: string;
+  formals: bind list;
+  locals: bind list;
+  body: stmt list;
+} *)
+
+(* func_def: ftyp fname decls body *)
+and func_def = {
+  ftyp: func_typ;
   rtyp: typ;
   fname: string;
   formals: bind list;
@@ -53,11 +69,14 @@ type func_def = {
   body: stmt list;
 }
 
-let func_to_def = function
-  | FuncTyp(rt, fn, fs, ls, bd) -> { rtyp = rt; fname = fn; formals = fs; locals = ls; body = bd}
+(* let func_to_def = function
+  | FuncTyp(rt, fn, fs, ls, bd) -> { rtyp = rt; fname = fn; formals = fs; locals = ls; body = bd} *)
 
 (* type program = bind list * func_def list *)
-type program = bind list * func_typ list
+type program = bind list * func_def list
+
+(* let stmt_of_fdecl = function
+  | fd -> FuncDef(fd) *)
 
 (* Pretty-printing functions *)
 let string_of_op = function
@@ -81,6 +100,24 @@ let string_of_op = function
 let string_of_uop = function
    Not -> "!"
 
+let string_of_const_typ = function
+  | Int_const -> "int"
+  | Bool_const -> "bool"
+  | Char_const -> "char"
+  | Float_const -> "float"
+  | Void_const -> "void"
+
+let rec string_of_typ = function
+  | Int -> "int"
+  | Bool -> "bool"
+  | Char -> "char"
+  | Float -> "float"
+  | Arr(t) -> string_of_typ t ^ "[]"
+  | Const(t) ->"const " ^ string_of_const_typ t 
+  | Void -> "void"
+  | Func((rt, tl)) -> string_of_typ rt ^ " (" ^ 
+    String.concat ", " (List.map string_of_typ tl) ^ ")"
+
 let rec string_of_expr = function
   | IntLit(l) -> string_of_int l
   | FloatLit(l) -> string_of_float l
@@ -97,6 +134,7 @@ let rec string_of_expr = function
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | Subsription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
   | Noexpr -> ""
+  (* | FuncDef(fd) -> string_of_fdecl fd *)
 
 let rec string_of_stmt = function
   | VoidStmt -> "void;"
@@ -116,45 +154,32 @@ let rec string_of_stmt = function
   | Continue -> "continue;"
   | Break -> "break;"
 
-let string_of_const_typ = function
-  | Int_const -> "int"
-  | Bool_const -> "bool"
-  | Char_const -> "char"
-  | Float_const -> "float"
-  | Void_const -> "void"
-
-
-let rec string_of_typ = function
-  | Int -> "int"
-  | Bool -> "bool"
-  | Char -> "char"
-  | Float -> "float"
-  | Arr(t) -> string_of_typ t ^ "[]"
-  | Const(t) ->"const " ^ string_of_const_typ t 
-  | Void -> "void"
-  | Func(ft) -> string_of_ftyp ft
-
 and string_of_bind = function
-  | t, s -> string_of_typ t ^ " " ^ s
+  | t, s -> string_of_typ t ^ " " ^ s ^ ";\n"
 
-and string_of_ftyp = function
-  | FuncTyp(rt, fn, fs, ls, bd) -> string_of_typ rt ^ " " ^ fn ^ " (" ^ 
-    String.concat ", " (List.map string_of_typ (List.map fst fs)) ^ ")\n{\n" ^
-    String.concat "" (List.map string_of_bind ls) ^
-    String.concat "" (List.map string_of_stmt bd) ^ "}\n"
+(* and string_of_fbind = function
+  | (rt, fs), decls, stmts, s -> string_of_typ rt ^ " " ^ s ^ " (" ^ 
+  String.concat ", " (List.map string_of_bind fs) ^ ")\n{\n" ^
+  String.concat "" (List.map string_of_bind decls) ^
+  String.concat "" (List.map string_of_stmt stmts) ^
+  "}\n" *)
 
-let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
+(* and string_of_ftyp = function
+  | rt, fs -> string_of_typ rt ^ " (" ^
+    String.concat ", " (List.map string_of_typ (List.map fst fs)) ^ ")" *)
 
-let string_of_fdecl fdecl =
+and string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
+
+and string_of_fdecl fdecl =
   string_of_typ fdecl.rtyp ^ " " ^
   fdecl.fname ^ "(" ^ String.concat ", " (List.map snd fdecl.formals) ^
   ")\n{\n" ^
-  String.concat "" (List.map string_of_vdecl fdecl.locals) ^
+  String.concat "" (List.map string_of_bind fdecl.locals) ^
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
 
 let string_of_program (vars, funcs) =
   "\n\nParsed program: \n\n" ^
-  String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
+  String.concat "" (List.map string_of_bind vars) ^ "\n" ^
   (* String.concat "\n" (List.map string_of_fdecl funcs) *)
-  String.concat "\n" (List.map string_of_ftyp funcs)
+  String.concat "\n" (List.map string_of_fdecl funcs)
