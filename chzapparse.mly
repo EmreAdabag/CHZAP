@@ -85,7 +85,6 @@ typ:
   | CHAR  { Char }
   | FLOAT { Float }
   | VOID  { Void }
-  | CHAR  { Char }
   | typ LBRACK RBRACK   { Arr($1) }
   | CONST const_typ { Const($2) }
 
