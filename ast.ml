@@ -18,7 +18,7 @@ type expr =
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of string * expr
-  | Subsription of string * expr
+  | Subscription of string * expr
   (* function call *)
   | Call of string * expr list
   | Noexpr
@@ -84,7 +84,7 @@ let rec string_of_expr = function
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-  | Subsription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
+  | Subscription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
   | Noexpr -> ""
 
 let rec string_of_stmt = function

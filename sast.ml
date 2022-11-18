@@ -15,7 +15,7 @@ and sx =
   | SAssign of string * sexpr
   (* call *)
   | SCall of string * sexpr list
-  | SSubsription of string * sexpr
+  | SSubscription of string * sexpr
   | SNoexpr
 
 type sstmt =
@@ -58,7 +58,7 @@ let rec string_of_sexpr (t, e) =
       | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e
       | SCall(f, el) ->
           f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
-      | SSubsription(a, e) -> a ^ "[" ^ string_of_sexpr e ^ "]" 
+      | SSubscription(a, e) -> a ^ "[" ^ string_of_sexpr e ^ "]" 
       | SNoexpr -> ""
   ) ^ ")"
       

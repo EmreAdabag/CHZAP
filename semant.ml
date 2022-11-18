@@ -166,9 +166,13 @@ let check (globals, functions) =
           let args' = List.map2 check_call fd.formals args
           in (fd.rtyp, SCall(fname, args'))
       | Noexpr -> (Int, SNoexpr)
-      | Subsription(a, e) -> 
+      | Subscription(a, e) -> 
         let (t', e') = check_expr e in
-        (Int, SSubsription(a, (Int, e'))) (* TODO *)
+        if t' != Int then 
+          let err = "array indicies must be integers, not " ^ string_of_typ t' in
+          raise(Failure err)
+        else
+        (Int, SSubscription(a, (Int, e'))) (* TODO... I think this is done? *)
     in
 
     let check_bool_expr e =
