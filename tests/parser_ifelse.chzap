@@ -1,0 +1,18 @@
+
+int main() {
+     if (b < a)
+     { 
+       a = a - b;
+     }
+     else
+     { 
+       b = b - a;
+     }
+     
+    if (b < a)
+     { 
+       a = a - b;
+     }
+
+    return a;
+ }
