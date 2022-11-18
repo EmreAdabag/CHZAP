@@ -53,15 +53,17 @@ decls:
 
 fdecl:
   vdecl LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-  {
-    {
-      rtyp = fst $1;
-      fname = snd $1;
-      formals = $3;
-      locals = $6;
-      body = $7
-    }
-  }
+  // {
+  //   {
+  //     rtyp = fst $1;
+  //     fname = snd $1;
+  //     formals = $3;
+  //     locals = $6;
+  //     body = $7
+  //   }
+  //   return func_typ * string like a variable
+  // }
+  { FuncTyp(fst $1, snd $1, $3, $6, $7) }
 
 /* formals_opt */
 formals_opt:
@@ -122,7 +124,7 @@ stmt_list:
 
 stmt:
   | expr SEMI { Expr($1) }
-  | LBRACE stmt_list RBRACE                 { Block $2 } 
+  | LBRACE stmt_list RBRACE                 { Block($2) } 
   /* if (condition) { block1} else {block2} */
   /* if (condition) stmt else stmt */
   // | typ ID LPAREN formals_list RPAREN stmt_block { Func(Bind($1, $2), $4, $6) }
