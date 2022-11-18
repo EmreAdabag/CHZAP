@@ -66,7 +66,9 @@ let check (globals, functions) =
     (* Raise an exception if the given rvalue type cannot be assigned to
        the given lvalue type *)
     let check_assign lvaluet rvaluet err =
-      if lvaluet = rvaluet then lvaluet else raise (Failure err)
+      if lvaluet = rvaluet then lvaluet 
+      else if rvaluet = Arr Void then lvaluet
+      else raise (Failure err)
     in
 
     (* Build local symbol table of variables for this function *)
@@ -79,10 +81,13 @@ let check (globals, functions) =
       try StringMap.find s symbols
       with Not_found -> raise (Failure ("undeclared identifier " ^ s))
     in
-
+(* 
     let check_arr l = (*TODO*)
       (Int, l)
     in 
+
+    let (t, l') = check_arr(l) in
+    (Arr t, SArrLit (List.map check_expr l')) *)
 
     (* Return a semantically-checked expression, i.e., with a type *)
     let rec check_expr = function
@@ -91,8 +96,20 @@ let check (globals, functions) =
       | CharLit l -> (Char, SCharLit l)
       | FloatLit l -> (Float, SFloatLit l)
       | ArrayLit l -> 
-        let (t, l') = check_arr(l) in
-        (Arr t, SArrLit (List.map check_expr l'))
+        let res = match l with
+        | [] -> (Arr Void, SArrLit [])          (* empty list literal *)
+        | hd::tl ->
+            let typecheck typ expr = 
+              let t, e' = check_expr expr in
+              if t != typ then 
+                let err = "inconsistent array " ^ string_of_expr (ArrayLit l) in
+                raise(Failure err)
+              else (t, e')
+            in
+            let hd_type, _ = check_expr hd in
+            let listcheck = typecheck hd_type in
+            (Arr hd_type, SArrLit (List.map listcheck l))
+          in res
       | Id var -> (type_of_identifier var, SId var)
       | Assign(var, e) as ex ->
         let lt = type_of_identifier var
