@@ -22,6 +22,9 @@ open Ast
 %start program
 %type <Ast.program> program
 
+%nonassoc NOELSE
+%nonassoc ELSE
+
 %right ASSIGN
 %left OR
 %left AND
@@ -31,8 +34,7 @@ open Ast
 %left TIMES DIVIDE MOD
 %right EXP
 %right NOT
-%nonassoc NOELSE
-%nonassoc ELSE
+%nonassoc LPAREN RPAREN
 
 %start program
 %type <Ast.program> program
@@ -165,10 +167,10 @@ expr:
   | expr AND expr     { Binop($1, And, $3) }
   | expr OR expr      { Binop($1, Or, $3) }
   | NOT expr          { Unop(Not, $2) }
+  | LPAREN expr RPAREN          { $2 }
   | ID ASSIGN expr    { Assign($1, $3) }
    /* call */
   | ID LPAREN args_opt RPAREN { Call ($1, $3)  }
-  | LPAREN expr RPAREN          { $2 }
 
 // possible fix of the args_opt issue?
 /* args_opt*/

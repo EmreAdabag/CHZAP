@@ -5,7 +5,7 @@ type op = Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | 
 type uop = Not
 
 type typ_const =  Int_const | Bool_const | Char_const | Float_const | Void_const  
-type typ = Int | Bool | Char | Float | Void | Arr of typ | Const of typ_const 
+type typ = Int | Bool | Char | Float | Void | Arr of typ | Const of typ_const
 
 (* int x: name binding *)
 (* type bind = Bind of typ * string *)
@@ -40,7 +40,6 @@ type stmt =
   (* return *)
   | Return of expr
   (* | ReturnVoid *)
-
 
 (* func_def: ret_typ fname formals locals body *)
 type func_def = {
@@ -105,7 +104,7 @@ let rec string_of_expr = function
   | Id(s) -> s
   | Unop (o, e) -> string_of_uop o ^ string_of_expr e
   | Binop(e1, o, e2) ->
-    string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
+    "(" ^ string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2 ^ ")"
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
