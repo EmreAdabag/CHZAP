@@ -75,14 +75,22 @@ let string_of_op = function
 let string_of_uop = function
    Not -> "!"
 
+
+let  string_of_const_typ = function
+Int_const -> "int"
+| Bool_const -> "bool"
+| Char_const -> "char"
+| Float_const -> "float"
+| Void_const -> "void"
+
 let rec string_of_typ = function
-  | Int -> "int"
-  | Float -> "float"
+    Int -> "int"
   | Bool -> "bool"
   | Char -> "char"
+  | Float -> "float"
+  | Arr(t) -> string_of_typ t ^ "[]"
+  | Const(t) ->"const " ^ string_of_const_typ t 
   | Void -> "void"
-  | Arr(t) ->  string_of_typ t ^ " []"
-  | Func -> "func"
 
 (* let string_of_bind = function
   | Bind(t, s) -> s ^ ": " ^ string_of_typ t *)
@@ -113,45 +121,13 @@ let rec string_of_stmt = function
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
-<<<<<<< HEAD
-  (* | ReturnVoid -> "return void;\n" *)
-  | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
-                      string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
-=======
   | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^ 
                       string_of_stmt s1 ^ ( if s2 = Block([]) then "" else "else\n" ^ string_of_stmt s2)
->>>>>>> df21846dce052b723fa3df86d5c0887e24beb3e0
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
   | For(e1, e2, e3, s) -> "roll (" ^ string_of_expr e1 ^ "; " ^ string_of_expr e2 ^ "; " ^ string_of_expr e3 ^ ") " ^ string_of_stmt s
   | Continue -> "continue;"
   | Break -> "break;"
 
-
-
-let  string_of_const_typ = function
-Int_const -> "int"
-| Bool_const -> "bool"
-| Char_const -> "char"
-| Float_const -> "float"
-| Void_const -> "void"
-
-
-<<<<<<< HEAD
-=======
-let rec string_of_typ = function
-    Int -> "int"
-  | Bool -> "bool"
-  | Char -> "char"
-  | Float -> "float"
-  | Arr(t) -> string_of_typ t ^ "[]"
-  | Const(t) ->"const " ^ string_of_const_typ t 
-  | Void -> "void"
-
-
-
-
-
->>>>>>> df21846dce052b723fa3df86d5c0887e24beb3e0
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 
 let string_of_fdecl fdecl =
