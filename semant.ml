@@ -28,6 +28,7 @@ let check (globals, functions) =
   (* Collect function declarations for built-in functions: no bodies *)
   let built_in_decls =
     StringMap.add "print" {
+      ftyp = (Int, [Int]);
       rtyp = Int;
       fname = "print";
       formals = [(Int, "x")];
@@ -66,7 +67,9 @@ let check (globals, functions) =
     (* Raise an exception if the given rvalue type cannot be assigned to
        the given lvalue type *)
     let check_assign lvaluet rvaluet err =
-      if lvaluet = rvaluet then lvaluet else raise (Failure err)
+      if lvaluet = rvaluet then lvaluet 
+      else if rvaluet = Arr Void then lvaluet
+      else raise (Failure err)
     in
 
     (* Build local symbol table of variables for this function *)
@@ -80,10 +83,28 @@ let check (globals, functions) =
       with Not_found -> raise (Failure ("undeclared identifier " ^ s))
     in
 
+
     (* Return a semantically-checked expression, i.e., with a type *)
     let rec check_expr = function
-        Literal l -> (Int, SLiteral l)
+        IntLit l -> (Int, SIntLit l)
       | BoolLit l -> (Bool, SBoolLit l)
+      | CharLit l -> (Char, SCharLit l)
+      | FloatLit l -> (Float, SFloatLit l)
+      | ArrayLit l -> 
+        let res = match l with
+        | [] -> (Arr Void, SArrLit [])          (* empty list literal *)
+        | hd::tl ->
+            let typecheck typ expr = 
+              let t, e' = check_expr expr in
+              if t != typ then 
+                let err = "inconsistent array " ^ string_of_expr (ArrayLit l) in
+                raise(Failure err)
+              else (t, e')
+            in
+            let hd_type, _ = check_expr hd in
+            let listcheck = typecheck hd_type in
+            (Arr hd_type, SArrLit (List.map listcheck l))
+          in res
       | Id var -> (type_of_identifier var, SId var)
       | Assign(var, e) as ex ->
         let lt = type_of_identifier var
@@ -93,6 +114,17 @@ let check (globals, functions) =
         in
         (check_assign lt rt err, SAssign(var, (rt, e')))
 
+      | Unop(op, e) -> 
+        let t, e' = check_expr e in 
+        let err = "illegal unary operator " ^ 
+                  string_of_uop op ^ string_of_typ t ^ " in " ^ 
+                  string_of_expr e
+        in
+        let ty = match op with
+          | Not when t = Bool -> t
+          | _ -> raise (Failure err)
+        in
+        (ty, SUnop(op, (t, e')))
       | Binop(e1, op, e2) as e ->
         let (t1, e1') = check_expr e1
         and (t2, e2') = check_expr e2 in
@@ -104,14 +136,22 @@ let check (globals, functions) =
         if t1 = t2 then
           (* Determine expression type based on operator and operand types *)
           let t = match op with
-              Add | Sub when t1 = Int -> Int
-            | Equal | Neq -> Bool
-            | Less when t1 = Int -> Bool
+              Add | Sub | Mul | Div | Mod | BWAnd | BWOr | Exp when t1 = Int -> Int
+            | Add | Sub | Mul | Div when t1 = Float -> Float
+            | Eq | Neq | Less | Greater | Geq | Leq when t1 = Int || t1 = Float || t1 = Bool -> Bool
             | And | Or when t1 = Bool -> Bool
             | _ -> raise (Failure err)
           in
           (t, SBinop((t1, e1'), op, (t2, e2')))
-        else raise (Failure err)
+        else
+          let t = match op with
+            Add | Sub | Mul | Div | Exp when t1 = Float && t2 = Int -> Float
+            | Add | Sub | Mul | Div when t1 = Int && t2 = Float -> Float
+            | Eq | Neq | Less | Greater | Geq | Leq when 
+              (t1 = Int || t1 = Float || t1 = Bool) && (t2 = Int || t2 = Float || t2 = Bool) -> Bool
+            | _ -> raise (Failure err)
+          in
+          (t, SBinop((t1, e1'), op, (t2, e2')))
       | Call(fname, args) as call ->
         let fd = find_func fname in
         let param_length = List.length fd.formals in
@@ -126,6 +166,14 @@ let check (globals, functions) =
           in
           let args' = List.map2 check_call fd.formals args
           in (fd.rtyp, SCall(fname, args'))
+      | Noexpr -> (Int, SNoexpr)
+      | Subscription(a, e) -> 
+        let (t', e') = check_expr e in
+        if t' != Int then 
+          let err = "array indicies must be integers, not " ^ string_of_typ t' in
+          raise(Failure err)
+        else
+        (Int, SSubscription(a, (Int, e'))) (* TODO... I think this is done? *)
     in
 
     let check_bool_expr e =
@@ -149,6 +197,10 @@ let check (globals, functions) =
         SIf(check_bool_expr e, check_stmt st1, check_stmt st2)
       | While(e, st) ->
         SWhile(check_bool_expr e, check_stmt st)
+      | For(e1, e2, e3, st) ->
+        SFor(check_expr e1, check_expr e2, check_expr e3, check_stmt st)
+      | Continue -> SContinue
+      | Break -> SBreak
       | Return e ->
         let (t, e') = check_expr e in
         if t = func.rtyp then SReturn (t, e')

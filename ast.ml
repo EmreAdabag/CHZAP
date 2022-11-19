@@ -29,14 +29,13 @@ type expr =
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of string * expr
-  | Subsription of string * expr
+  | Subscription of string * expr
   (* function call *)
   | Call of string * expr list
   (* | FuncDef of func_def *)
   | Noexpr
 
 type stmt =
-  | VoidStmt
   (* | Func of bind * bind list * stmt *)
   | Block of stmt list
   | Expr of expr
@@ -132,12 +131,11 @@ let rec string_of_expr = function
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-  | Subsription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
+  | Subscription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
   | Noexpr -> ""
   (* | FuncDef(fd) -> string_of_fdecl fd *)
 
 let rec string_of_stmt = function
-  | VoidStmt -> "void;"
   (* | Func(b, bl, s) -> 
     string_of_bind b ^ " (" ^ String.concat ", " (List.map string_of_bind bl) ^ ")\n" ^ 
     string_of_stmt s ^ "\n" *)
