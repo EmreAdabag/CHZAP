@@ -54,6 +54,8 @@ let check program =
 
   (* Return a variable from our local symbol table *)
   let type_of_identifier s symbols =
+    if Hashtbl.mem globals s then
+      Hashtbl.find globals s else
     try Hashtbl.find symbols s
     with Not_found -> raise (Failure ("undeclared identifier " ^ s))
   in
@@ -206,36 +208,35 @@ let check program =
       SFor(check_expr e1 svars, check_expr e2 svars, check_expr e3 svars, check_stmt st svars)
     | Continue -> SContinue
     | Break -> SBreak
-    | Return e ->
+    | Return e -> 
       let (t, e') = check_expr e svars in
-      if t = func.rtyp then SReturn (t, e')
+      SReturn(t, e')
+      (* TODO: need to check that return val matches declared return val *)
+      (* if t = func.rtyp then SReturn (t, e')
       else raise (
           Failure ("return gives " ^ string_of_typ t ^ " expected " ^
-                  string_of_typ func.rtyp ^ " in " ^ string_of_expr e))
-    | Func(f) -> Hashtbl.add function_decls f.fname f; check_func f svars
+                  string_of_typ func.rtyp ^ " in " ^ string_of_expr e)) *)
+    | Func(f) -> check_func f svars
 
   (* return semantically checked function *)
-  and check_func func fnames svars =
+  and check_func func svars =
       
     (* add function name to set of function names *)
-    let fnames = add_func fnames func in
+    let _ = add_func func in
 
     (* Make sure no formals are void or duplicates *)
     let _ = check_binds "formal" func.formals in
 
-    (* add function to global list of functions *)
-    let function_decls = add_func func in
-
-    let symbols = Hashtbl.create 1000 in
+    let symbols = Hashtbl.copy svars in
 
     (* Build local symbol table of variables for this function *)
-    let _ = List.map (fun (ty, name) -> Hashtbl.add symbols name ty) (svars @ func.formals ) 
+    let _ = List.map (fun (ty, name) -> Hashtbl.add symbols name ty) (func.formals ) 
 
   in
     (* body of check_func *)
-    { srtyp = func.rtyp;
+    SFunc({ srtyp = func.rtyp;
       sfname = func.fname;
       sformals = func.formals;
       sbody = check_stmt func.body symbols;
-    }
+    })
   in check_stmt_list program globals

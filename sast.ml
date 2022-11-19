@@ -52,24 +52,33 @@ let rec string_of_sexpr (t, e) =
         SIntLit(l) -> string_of_int l
       | SBoolLit(true) -> "true"
       | SBoolLit(false) -> "false"
+      | SCharLit(l) -> Char.escaped l
+      | SFloatLit(l) -> string_of_float l
+      | SArrayLit(l) -> "[" ^ String.concat "," (List.map string_of_sexpr l) ^ "]"
       | SId(s) -> s
+      | SUnop(o, e) -> "TODO SUnop"
       | SBinop(e1, o, e2) ->
         string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
       | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e
       | SCall(f, el) ->
           f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
-    ) ^ ")"
-
+      | SSubscription(a, e) -> a ^ "[" ^ string_of_sexpr e ^ "]" 
+      | SNoexpr -> ""
+  ) ^ ")"
+      
 let rec string_of_sstmt = function
-    SBlock(stmts) ->
+  SBstmt(b) -> string_of_typ (fst b) ^ ": " ^ snd b
+  |SBlock(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_sstmt stmts) ^ "}\n"
   | SExpr(expr) -> string_of_sexpr expr ^ ";\n"
   | SReturn(expr) -> "return " ^ string_of_sexpr expr ^ ";\n"
   | SIf(e, s1, s2) ->  "if (" ^ string_of_sexpr e ^ ")\n" ^
                        string_of_sstmt s1 ^ "else\n" ^ string_of_sstmt s2
   | SWhile(e, s) -> "while (" ^ string_of_sexpr e ^ ") " ^ string_of_sstmt s
+  | SFor(e1, e2, e3, s) -> "for (" ^ string_of_sexpr e1 ^ "; " ^ string_of_sexpr e2 ^ "; " ^ string_of_sexpr e3 ^ ") " ^ string_of_sstmt s
+  | SContinue -> "continue;\n"
+  | SBreak -> "break;\n"
 
-
-let string_of_sprogram (vars, funcs) =
+let string_of_sprogram (sprogram) =
   "\n\nSementically checked program: \n\n" ^
-  String.concat "" (List.map string_of_sstmt vars) ^ "\n"
+  String.concat "" (List.map string_of_sstmt sprogram) ^ "\n"
