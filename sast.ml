@@ -31,6 +31,7 @@ type sstmt =
 
 (* func_def: ret_typ fname formals locals body *)
 type sfunc_def = {
+  sftyp: ftyp;
   srtyp: typ;
   sfname: string;
   sformals: bind list;

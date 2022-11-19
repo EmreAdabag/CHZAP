@@ -6,12 +6,12 @@ type op =
 type uop = Not
 
 type typ_const =  Int_const | Bool_const | Char_const | Float_const | Void_const  
-type func_typ = typ * typ list
+type ftyp = typ * typ list
 and typ = 
   | Int | Bool | Char | Float | Void 
   | Arr of typ 
   | Const of typ_const 
-  | Ftyp of func_typ
+  | Ftyp of ftyp
 
 (* int x: name binding *)
 (* type bind = Bind of typ * string *)
@@ -60,7 +60,7 @@ type stmt =
 
 (* func_def: ftyp fname decls body *)
 type func_def = {
-  ftyp: func_typ;
+  ftyp: ftyp;
   rtyp: typ;
   fname: string;
   formals: bind list;

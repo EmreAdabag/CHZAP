@@ -208,7 +208,8 @@ let check (globals, functions) =
             Failure ("return gives " ^ string_of_typ t ^ " expected " ^
                      string_of_typ func.rtyp ^ " in " ^ string_of_expr e))
     in (* body of check_func *)
-    { srtyp = func.rtyp;
+    { sftyp = func.ftyp;
+      srtyp = func.rtyp;
       sfname = func.fname;
       sformals = func.formals;
       slocals  = func.locals;

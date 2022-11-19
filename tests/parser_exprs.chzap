@@ -1,11 +1,11 @@
 /* CHZAP exprs */
 
-int add(int a, int b) {
-    return f(a, b);
+int sum(int a, int b) {
+    return a + b;
 }
 
 int add(int a, int b, function(int, int) -> int f) {
-    return f(a, b);
+    return 0;//f(a, b);
 }
 
 function(void) -> int somefunc;
@@ -19,18 +19,18 @@ int main() {
     const int l;
     char c;
     int[] arr;
-    function(int, int) -> int f;
+    function(int, int) -> int g;
 
     a = 3;
-    y = 5 / 2.0;
+    //y = 5 / 2.0;
     x = 5 * 2  + 1;
-    z = x + y ; // int + float
-    z = ( x + y ) * 2;
+    //z = x + y ; // int + float
+    //z = ( x + y ) * 2;
     k = x < 5;
     k = false;
     k = true;
     c = 'c';
-    j = a + y + x;
+    // j = a + y + x;
     // function(int a, int b) -> int { return a + b; }
     // s = add(a, b, function(int x, int y) -> { return x + y; });
 }
