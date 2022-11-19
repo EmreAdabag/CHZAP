@@ -110,10 +110,20 @@ typ_no_arr:
   | CONST const_typ { Const($2) }
   // | ftyp { Func($1) }
 
+// function(int, int) -> int f               what's the name of this thing?
+ftyp:
+FUNC LPAREN typ_list RPAREN ARROW typ_no_arr
+{
+  {
+    rtyp=$6;
+    intypes=$3;
+  }
+}
+
 typ:
   | typ_no_arr { $1 }
   | typ LBRACK RBRACK   { Arr($1) }
-  | FUNC LPAREN typ_list RPAREN ARROW typ_no_arr { Ftyp($6, $3) }
+  | ftyp { Ftyp($1) }
 
 /* type list is forced to be non-empty (use "void" as placeholder) */
 typ_list:
@@ -133,12 +143,23 @@ stmt_list:
 
 bind:
   // | ID { Bind(Dyn, $1) }
-  | typ ID { Bind($1, $2) }
+  | typ ID { ($1, $2) }
 
 formals_list:
   | /* empty */ { [] }
   | bind { [$1] }
   | bind COMMA formals_list { $1 :: $3 }
+
+fdecl:
+typ ID LPAREN formals_list RPAREN stmt
+{
+  {
+  rtyp=$1;
+  fname=$2;
+  formals=$4;
+  body=$6
+  }
+}
 
 stmt:
   // empty stmt
@@ -156,7 +177,7 @@ stmt:
   | CONTINUE SEMI   { Continue }
   | RETURN expr_opt SEMI { Return($2) }
   // func def
-  | typ ID LPAREN formals_list RPAREN stmt { Func(Bind($1, $2), $4, $6) }
+  | fdecl { Func($1) }
 
 // decl:
 //   | typ ID SEMI { Bind($1, $2) }
@@ -171,7 +192,7 @@ expr:
   | FLOAT_LITERAL     { FloatLit($1) }
   | CHAR_LITERAL      { CharLit($1) }
   | LBRACK args_opt RBRACK { ArrayLit($2) }
-  | ID LBRACK expr RBRACK  { Subsription($1, $3) }
+  | ID LBRACK expr RBRACK  { Subscription($1, $3) }
   | ID                { Id($1) }
   | expr PLUS expr    { Binop($1, Add, $3) }
   | expr MINUS expr   { Binop($1, Sub, $3) }

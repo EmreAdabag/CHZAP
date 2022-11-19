@@ -4,39 +4,52 @@ open Ast
 
 type sexpr = typ * sx
 and sx =
-    SLiteral of int
+  | SIntLit of int
   | SBoolLit of bool
+  | SCharLit of char
+  | SFloatLit of float
+  | SArrayLit of sexpr list
   | SId of string
   | SBinop of sexpr * op * sexpr
+  | SUnop of uop * sexpr
   | SAssign of string * sexpr
-  (* call *)
+  | SSubscription of string * sexpr
+  (*S function call *)
   | SCall of string * sexpr list
+  | SNoexpr
+  (*S anonymous *)
+  | SAfunc of typ * bind list * sstmt
 
-type sstmt =
-    SBlock of sstmt list
+and sstmt =
+  (* consider binding as a separate stmt *)
+  | SBstmt of bind
+  | SBlock of sstmt list
   | SExpr of sexpr
   | SIf of sexpr * sstmt * sstmt
+  | SFor of sexpr * sexpr * sexpr * sstmt 
   | SWhile of sexpr * sstmt
-  (* return *)
+  | SContinue
+  | SBreak
+  (*S return *)
   | SReturn of sexpr
+  (*S func_def *)
+  | SFunc of sfunc_def
 
-(* func_def: ret_typ fname formals locals body *)
-type sfunc_def = {
+and sfunc_def = {
   srtyp: typ;
   sfname: string;
   sformals: bind list;
-  slocals: bind list;
-  sbody: sstmt list;
+  sbody: sstmt;
 }
 
-type sprogram = bind list * sfunc_def list
+type sprogram = sstmt list
 
 
 
 (* Pretty-printing functions *)
 let rec string_of_sexpr (t, e) =
   "(" ^ string_of_typ t ^ " : " ^ (match e with
-        SLiteral(l) -> string_of_int l
+        SIntLit(l) -> string_of_int l
       | SBoolLit(true) -> "true"
       | SBoolLit(false) -> "false"
       | SId(s) -> s
@@ -56,15 +69,7 @@ let rec string_of_sstmt = function
                        string_of_sstmt s1 ^ "else\n" ^ string_of_sstmt s2
   | SWhile(e, s) -> "while (" ^ string_of_sexpr e ^ ") " ^ string_of_sstmt s
 
-let string_of_sfdecl fdecl =
-  string_of_typ fdecl.srtyp ^ " " ^
-  fdecl.sfname ^ "(" ^ String.concat ", " (List.map snd fdecl.sformals) ^
-  ")\n{\n" ^
-  String.concat "" (List.map string_of_vdecl fdecl.slocals) ^
-  String.concat "" (List.map string_of_sstmt fdecl.sbody) ^
-  "}\n"
 
 let string_of_sprogram (vars, funcs) =
   "\n\nSementically checked program: \n\n" ^
-  String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
-  String.concat "\n" (List.map string_of_sfdecl funcs)
+  String.concat "" (List.map string_of_sstmt vars) ^ "\n"

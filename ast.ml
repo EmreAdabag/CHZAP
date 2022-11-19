@@ -5,16 +5,22 @@ type op =
 type uop = Not
 
 type typ_const =  Int_const | Bool_const | Char_const | Float_const | Void_const
-type ftyp = typ * typ list
-and typ = 
+
+type typ = 
   | Int | Bool | Float | Char | Void 
   | Arr of typ 
   | Const of typ_const 
   | Ftyp of ftyp
   | Dyn 
+and ftyp =
+{
+  rtyp: typ;
+  intypes: typ list;
+}
+
 
 (* int x: name binding *)
-type bind = Bind of typ * string
+type bind = typ * string
 
 type expr =
   | IntLit of int
@@ -26,7 +32,7 @@ type expr =
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of string * expr
-  | Subsription of string * expr
+  | Subscription of string * expr
   (* function call *)
   | Call of string * expr list
   | Noexpr
@@ -46,17 +52,16 @@ and stmt =
   (* return *)
   | Return of expr
   (* func_def *)
-  | Func of bind * bind list * stmt
+  | Func of func_def
 
-(* 
-(* func_def: ret_typ fname formals locals body *)
-type func_def = {
+and func_def = {
   rtyp: typ;
   fname: string;
   formals: bind list;
-  locals: bind list;
-  body: stmt list;
-} *)
+  body: stmt;
+}
+
+(* func_def: ret_typ fname formals locals body *)
 
 (* type program = bind list * func_def list *)
 type program = stmt list
@@ -99,33 +104,14 @@ let rec string_of_typ = function
   | Arr(t) -> string_of_typ t ^ "[]"
   | Const(t) ->"const " ^ string_of_const_typ t 
   | Void -> "void"
-  | Ftyp(t, tl) -> "function (" ^ String.concat ", " 
-    (List.map string_of_typ tl) ^ ") -> " ^ string_of_typ t
+  | Ftyp(t) -> "function (" ^ String.concat ", " 
+    (List.map string_of_typ t.intypes) ^ ") -> " ^ string_of_typ t.rtyp
   | Dyn -> "dyn"
 
-let string_of_bind = function
-  | Bind(t, s) -> s ^ ": " ^ string_of_typ t
+let string_of_bind b= 
+  "(" ^ string_of_typ (fst b) ^ ": " ^ snd b ^ ")"
 
 let rec string_of_stmt stmt = 
-  let rec string_of_expr = function
-    | IntLit(l) -> string_of_int l
-    | FloatLit(l) -> string_of_float l
-    | CharLit(l) -> Char.escaped l
-    | BoolLit(true) -> "true"
-    | BoolLit(false) -> "false"
-    | ArrayLit(el) -> "[" ^ String.concat "," (List.map string_of_expr el) ^ "]"
-    | Id(s) -> s
-    | Unop (o, e) -> string_of_uop o ^ string_of_expr e
-    | Binop(e1, o, e2) ->
-      "(" ^ string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2 ^ ")"
-    | Assign(v, e) -> v ^ " = " ^ string_of_expr e
-    | Call(f, el) ->
-        f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-    | Subsription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
-    | Noexpr -> ""
-    | Afunc(t, bl, s) -> "lambda: " ^ string_of_typ t ^ " (" ^ String.concat ", " 
-      (List.map string_of_bind bl) ^ ")\n" ^ string_of_stmt s ^ "\n" in
-
   match stmt with
   | Bstmt(b) -> string_of_bind b ^ "\n"
   | Block(stmts) ->
@@ -140,19 +126,38 @@ let rec string_of_stmt stmt =
     string_of_expr e3 ^ ") " ^ string_of_stmt s
   | Continue -> "continue;"
   | Break -> "break;"
-  | Func(b, bl, s) -> 
-    "function " ^ string_of_bind b ^ " (" ^ String.concat ", " 
+  | Func(f) -> string_of_func f
+    
+    (* "function " ^ string_of_bind b ^ " (" ^ String.concat ", " 
+    (List.map string_of_bind bl) ^ ")\n" ^ string_of_stmt s ^ "\n" *)
+
+and string_of_expr = function
+  | IntLit(l) -> string_of_int l
+  | FloatLit(l) -> string_of_float l
+  | CharLit(l) -> Char.escaped l
+  | BoolLit(true) -> "true"
+  | BoolLit(false) -> "false"
+  | ArrayLit(el) -> "[" ^ String.concat "," (List.map string_of_expr el) ^ "]"
+  | Id(s) -> s
+  | Unop (o, e) -> string_of_uop o ^ string_of_expr e
+  | Binop(e1, o, e2) ->
+    "(" ^ string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2 ^ ")"
+  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  | Call(f, el) ->
+      f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+  | Subscription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
+  | Noexpr -> ""
+  | Afunc(t, bl, s) -> "lambda: " ^ string_of_typ t ^ " (" ^ String.concat ", " 
     (List.map string_of_bind bl) ^ ")\n" ^ string_of_stmt s ^ "\n"
 
-let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
+and string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 
-(* let string_of_fdecl fdecl =
-  string_of_typ fdecl.rtyp ^ " " ^
-  fdecl.fname ^ "(" ^ String.concat ", " (List.map snd fdecl.formals) ^
-  ")\n{\n" ^
-  String.concat "" (List.map string_of_vdecl fdecl.locals) ^
-  String.concat "" (List.map string_of_stmt fdecl.body) ^
-  "}\n" *)
+and string_of_func func =
+  string_of_typ func.rtyp ^ " " ^
+  func.fname ^ "(" ^ String.concat ", " (List.map string_of_bind func.formals) ^
+  ")\n"
+  ^ (string_of_stmt func.body) ^
+  "\n"
 
 (* let string_of_program (vars, funcs) =
   "\n\nParsed program: \n\n" ^
