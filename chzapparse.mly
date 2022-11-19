@@ -108,7 +108,7 @@ typ:
   // | typ FUNC LPAREN typ_list RPAREN { ($1, $4) }
   // | FUNC LPAREN RPAREN ARROW typ_no_arr { Func($5, []) }
   // | FUNC LPAREN typ_no_arr RPAREN ARROW typ_no_arr { Func($6, [$3]) }
-  | FUNC LPAREN typ_list RPAREN ARROW typ_no_arr { Func($6, $3) }
+  | FUNC LPAREN typ_list RPAREN ARROW typ_no_arr { Ftyp($6, $3) }
 
 typ_list:
   // | /* empty list */ { [] }

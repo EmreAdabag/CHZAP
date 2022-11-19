@@ -11,7 +11,7 @@ and typ =
   | Int | Bool | Char | Float | Void 
   | Arr of typ 
   | Const of typ_const 
-  | Func of func_typ
+  | Ftyp of func_typ
 
 (* int x: name binding *)
 (* type bind = Bind of typ * string *)
@@ -19,7 +19,7 @@ type bind = typ * string
 (* int f() { ... }: function binding *)
 (* and fbind = func_typ * bind list * stmt list * string *)
 
-and expr =
+type expr =
   | IntLit of int
   | BoolLit of bool
   | CharLit of char
@@ -35,7 +35,7 @@ and expr =
   (* | FuncDef of func_def *)
   | Noexpr
 
-and stmt =
+type stmt =
   | VoidStmt
   (* | Func of bind * bind list * stmt *)
   | Block of stmt list
@@ -60,7 +60,7 @@ and stmt =
 } *)
 
 (* func_def: ftyp fname decls body *)
-and func_def = {
+type func_def = {
   ftyp: func_typ;
   rtyp: typ;
   fname: string;
@@ -115,7 +115,7 @@ let rec string_of_typ = function
   | Arr(t) -> string_of_typ t ^ "[]"
   | Const(t) ->"const " ^ string_of_const_typ t 
   | Void -> "void"
-  | Func((rt, tl)) -> string_of_typ rt ^ " (" ^ 
+  | Ftyp((rt, tl)) -> string_of_typ rt ^ " (" ^ 
     String.concat ", " (List.map string_of_typ tl) ^ ")"
 
 let rec string_of_expr = function
