@@ -1,33 +1,27 @@
-(* Ocamllex scanner for MicroC *)
+(* Ocamllex scanner for Chzap *)
 
 { open Chzapparse }
 
 let alpha = ['a'-'z' 'A'-'Z']
 let digit = ['0'-'9']
-let id = alpha (alpha | digit | '_')*
-(* let char = ''' ( ascii | digit ) ''' *)
-let char = ''' ( alpha | digit ) '''
-let float = (digit+) ['.'] digit+
-let int = digit+
-let whitespace = [' ' '\t' '\r']
-let newline = ['\n']
+let floatnumber = (digit+ '.' digit+)
+let whitespace = [' ' '\r' '\t' '\n']
 
 rule token = parse
 whitespace { token lexbuf }
-| newline { token lexbuf}
-(* | newline { LB }
-| indent { TAB } *)
-| "/*" { opencomment lexbuf }
-| "//" { comment lexbuf }
+(* | newline { token lexbuf} *)
+| "/*" { multi_comment 0 lexbuf }
+| "//" { single_comment lexbuf }
 | '(' { LPAREN }
 | ')' { RPAREN }
+| '{' { LBRACE }
+| '}' { RBRACE }
+| '[' { LBRACK }
+| ']' { RBRACK }
 | ';' { SEMI }
 | ':' { COLON }
 | ',' { COMMA }
-| "[" { LBRACK }
-| "]" { RBRACK }
-| "{" { LBRACE }
-| "}" { RBRACE }
+| "->" { ARROW }
 
 (* Operators *)
 | '+' { PLUS }
@@ -35,19 +29,19 @@ whitespace { token lexbuf }
 | '*' { TIMES }
 | "**" { EXP }
 | '/' { DIVIDE }
-| '%' { MODULO }
+| '%' { MOD }
 | '=' { ASSIGN }
 | "==" { EQ }
 | "!=" { NEQ }
 | '<' { LT }
 | "<=" { LEQ }
-| ">" { GT }
+| '>' { GT }
 | ">=" { GEQ }
 | "&&" { AND }
 | "||" { OR }
-| "!" { NOT }
-| "&" { BWAND }
-| "|" { BWOR }
+| '!' { NOT }
+| '&' { BWAND }
+| '|' { BWOR }
 
 (* flow control *)
 | "if" { IF }
@@ -56,36 +50,40 @@ whitespace { token lexbuf }
 | "while" { WHILE }
 | "continue" { CONTINUE }
 | "break" { BREAK }
+| "return" { RETURN }
+(* | "true" { TRUE }
+| "false" { FALSE } *)
 
 (* types *)
-| "int" { INT }
-| "uint" { UINT }
-| "char" { CHAR }
-| "const" { CONST }
-| "float" { FLOAT }
 | "bool" { BOOL }
+| "char" { CHAR }
+| "uint" { UINT }
+| "int" { INT }
+| "float" { FLOAT }
+| "void" { VOID } 
+| "const" { CONST }
 | "function" { FUNC }
 
-(* misc *)
-| "return" { RETURN }
-| "void" { VOID } 
-| "true" { TRUE }
-| "false" { FALSE }
-
 (* literals *)
-| id as lit { ID(lit) }
-| int as lit { INT_LITERAL(int_of_string lit) }
-| float as lit { FLOAT_LITERAL(float_of_string lit) }
-| char as lit { CHAR_LITERAL( String.get lit 1 ) }
+| "true" { BOOL_LITERAL(true) }
+| "false" { BOOL_LITERAL(false) }
+| (alpha) (alpha | digit | '_')* as lit { ID(lit) }
+| digit+ as lit { INT_LITERAL(int_of_string lit) }
+| floatnumber as lit { FLOAT_LITERAL(float_of_string lit) }
+| "'" ( _ as c) "'" { CHAR_LITERAL(c) }
 
 | eof    { EOF }
+| _ as c { raise (Failure("illegal character " ^ Char.escaped c)) }
 
 
-and opencomment = parse
-newline { opencomment lexbuf }
-| "*/" { token lexbuf }
-| _ { opencomment lexbuf }
 
-and comment = parse
-newline {token lexbuf}
-| _ {comment lexbuf}
+and multi_comment level = parse
+| "*/" { if level = 0 then token lexbuf else multi_comment (level - 1) lexbuf}
+| "/*" {multi_comment (level + 1) lexbuf}
+| eof { raise (Failure("Unclosed comment. ")) }
+| _ { multi_comment level lexbuf }
+
+and single_comment = parse
+| '\n' { token lexbuf }
+| eof { EOF }
+| _ { single_comment lexbuf }
