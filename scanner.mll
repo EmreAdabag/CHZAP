@@ -5,13 +5,12 @@
 let alpha = ['a'-'z' 'A'-'Z']
 let digit = ['0'-'9']
 let floatnumber = (digit+ '.' digit+)
-let whitespace = [' ' '\r']
+let whitespace = [' ' '\r' '\t' '\n']
+
 
 rule token = parse
 whitespace { token lexbuf }
 (* | newline { token lexbuf} *)
-| '\n' { LB }
-| '\t' { INDENT }
 | "/*" { multi_comment 0 lexbuf }
 | "//" { single_comment lexbuf }
 | '(' { LPAREN }
@@ -23,6 +22,7 @@ whitespace { token lexbuf }
 | ';' { SEMI }
 | ':' { COLON }
 | ',' { COMMA }
+| "->" { ARROW }
 
 (* Operators *)
 | '+' { PLUS }
@@ -36,7 +36,7 @@ whitespace { token lexbuf }
 | "!=" { NEQ }
 | '<' { LT }
 | "<=" { LEQ }
-| ">" { GT }
+| '>' { GT }
 | ">=" { GEQ }
 | "&&" { AND }
 | "||" { OR }
@@ -51,8 +51,10 @@ whitespace { token lexbuf }
 | "while" { WHILE }
 | "continue" { CONTINUE }
 | "break" { BREAK }
-| "function" { FUNC } (* Reserved for lambda function *)
 | "return" { RETURN }
+(* | "true" { TRUE }
+| "false" { FALSE } *)
+
 
 (* types *)
 | "bool" { BOOL }
@@ -62,19 +64,19 @@ whitespace { token lexbuf }
 | "float" { FLOAT }
 | "void" { VOID } 
 | "const" { CONST }
+| "function" { FUNC }
 
 
 (* literals *)
 | "true" { BOOL_LITERAL(true) }
 | "false" { BOOL_LITERAL(false) }
-| (alpha | '_') (alpha | digit | '_')* as lit { ID(lit) }
+| (alpha) (alpha | digit | '_')* as lit { ID(lit) }
 | digit+ as lit { INT_LITERAL(int_of_string lit) }
 | floatnumber as lit { FLOAT_LITERAL(float_of_string lit) }
-| "'" ( _ as c) "'" as lit { CHAR_LITERAL(c) }
-
+| "'" ( _ as c) "'" { CHAR_LITERAL(c) }
 
 | eof    { EOF }
-| _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
+| _ as c { raise (Failure("illegal character " ^ Char.escaped c)) }
 
 
 and multi_comment level = parse

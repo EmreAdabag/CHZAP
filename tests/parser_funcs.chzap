@@ -1,0 +1,31 @@
+/* CHZAP functions */
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int sum(int a, int b, function(int, int) -> int f) {
+    return f(a, b);
+}
+
+function(void) -> int func_decl;
+
+int main() {
+    int a = 3;
+    int y = 5 / 2.0;
+    int x = 5 * 2  + 1;
+    float z = x + y; // int + float
+    bool k = x < 5;
+    const int l;
+    char c = 'c';
+    int[] arr;
+    function(int, int) -> int f;
+
+    z = (x + y) * 2;
+    k = false;
+    k = true;
+    arr = [1, 2, 3];
+    j = a + y + x;
+    s = sum(a, b, function(int x, int y) -> int { return x + y; });
+}
+// there must be a new line at the end of file

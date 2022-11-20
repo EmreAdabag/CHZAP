@@ -4,6 +4,10 @@
 # build
 _build/
 
+# grammar
+*.mli
+*.output
+
 # compiler
 *.native
 
