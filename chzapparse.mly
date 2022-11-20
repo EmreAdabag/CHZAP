@@ -9,13 +9,14 @@ open Ast
 %token ASSIGN
 %token EQ NEQ LT LEQ GT GEQ AND OR
 %token NOELSE IF ELSE FOR WHILE CONTINUE BREAK
-%token INT UINT CHAR CONST FLOAT BOOL
+%token INT UINT CHAR STRING CONST FLOAT BOOL
 /* return, COMMA token */
 %token RETURN VOID TRUE FALSE
 %token COMMA LB TAB INDENT DEDENT
 %token <int> INT_LITERAL
 %token <float> FLOAT_LITERAL
 %token <char> CHAR_LITERAL
+%token <string> STR_LITERAL
 %token <bool> BOOL_LITERAL
 %token <string> ID
 %token EOF
@@ -83,6 +84,7 @@ typ:
     INT   { Int  }
   | BOOL  { Bool }
   | CHAR  { Char }
+  | STRING { String }
   | FLOAT { Float }
   | VOID  { Void }
   | typ LBRACK RBRACK   { Arr($1) }
@@ -126,6 +128,7 @@ expr:
   | BOOL_LITERAL      { BoolLit($1) }
   | FLOAT_LITERAL     { FloatLit($1) }
   | CHAR_LITERAL      { CharLit($1) }
+  | STR_LITERAL       { Strlit($1) }
   | LBRACK args_opt RBRACK { ArrayLit($2) }
   | ID LBRACK expr RBRACK  { Subscription($1, $3) }
   | ID                { Id($1) }

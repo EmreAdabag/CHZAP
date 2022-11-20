@@ -3,6 +3,7 @@ int main() {
     char b;
     float c;
     int[] d;
+    string e;
      
     a = 1;
     b = 'c';

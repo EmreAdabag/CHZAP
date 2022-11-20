@@ -54,6 +54,7 @@ whitespace { token lexbuf }
 (* types *)
 | "bool" { BOOL }
 | "char" { CHAR }
+| "string" { STRING }
 | "uint" { UINT }
 | "int" { INT }
 | "float" { FLOAT }
