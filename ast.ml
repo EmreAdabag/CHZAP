@@ -36,6 +36,7 @@ type expr =
 and stmt =
   (* consider binding as a separate stmt *)
   | Bstmt of bind
+  | BAstmt of bind * expr
   | Block of stmt list
   | Expr of expr
   | If of expr * stmt * stmt
@@ -130,6 +131,8 @@ let rec string_of_stmt stmt =
 
   match stmt with
   | Bstmt(b) -> string_of_bind b ^ "\n"
+  | BAstmt(Bind(t, s), e) -> 
+    string_of_bind (Bind(t, s)) ^ "\n" ^ string_of_expr (Assign(s, e)) ^ "\n"
   | Block(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"

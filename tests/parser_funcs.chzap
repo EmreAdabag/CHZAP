@@ -11,25 +11,20 @@ int sum(int a, int b, function(int, int) -> int f) {
 function(void) -> int func_decl;
 
 int main() {
-    int a;
-    int y;
-    int x;
-    float z;
-    bool k;
+    int a = 3;
+    int y = 5 / 2.0;
+    int x = 5 * 2  + 1;
+    float z = x + y; // int + float
+    bool k = x < 5;
     const int l;
-    char c;
+    char c = 'c';
     int[] arr;
     function(int, int) -> int f;
 
-    a = 3;
-    y = 5 / 2.0;
-    x = 5 * 2  + 1;
-    z = x + y ; // int + float
-    z = ( x + y ) * 2;
-    k = x < 5;
+    z = (x + y) * 2;
     k = false;
     k = true;
-    c = 'c';
+    arr = [1, 2, 3];
     j = a + y + x;
     s = sum(a, b, function(int x, int y) -> int { return x + y; });
 }

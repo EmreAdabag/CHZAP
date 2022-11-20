@@ -35,7 +35,8 @@ open Ast
 %right EXP
 %right NOT
 
-%nonassoc LPAREN RPAREN
+%nonassoc LPAREN LBRACK LBRACE
+%nonassoc RPAREN RBRACK RBRACE
 
 %%
 
@@ -146,6 +147,7 @@ stmt:
   | LBRACE stmt_list RBRACE { Block($2) }
   // decls
   | bind SEMI { Bstmt($1) }
+  | bind ASSIGN expr SEMI { BAstmt($1, $3) }
   // control flows
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
