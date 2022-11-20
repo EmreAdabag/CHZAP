@@ -171,7 +171,7 @@ expr:
   | FLOAT_LITERAL     { FloatLit($1) }
   | CHAR_LITERAL      { CharLit($1) }
   | LBRACK args_opt RBRACK { ArrayLit($2) }
-  | ID LBRACK expr RBRACK  { Subsription($1, $3) }
+  | ID LBRACK expr RBRACK  { Subscription($1, $3) }
   | ID                { Id($1) }
   | expr PLUS expr    { Binop($1, Add, $3) }
   | expr MINUS expr   { Binop($1, Sub, $3) }

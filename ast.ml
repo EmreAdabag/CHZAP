@@ -26,7 +26,7 @@ type expr =
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of string * expr
-  | Subsription of string * expr
+  | Subscription of string * expr
   (* function call *)
   | Call of string * expr list
   | Noexpr
@@ -106,25 +106,27 @@ let rec string_of_typ = function
 let string_of_bind = function
   | Bind(t, s) -> s ^ ": " ^ string_of_typ t
 
+let rec string_of_expr = function
+  | IntLit(l) -> string_of_int l
+  | FloatLit(l) -> string_of_float l
+  | CharLit(l) -> Char.escaped l
+  | BoolLit(true) -> "true"
+  | BoolLit(false) -> "false"
+  | ArrayLit(el) -> "[" ^ String.concat "," (List.map string_of_expr el) ^ "]"
+  | Id(s) -> s
+  | Unop (o, e) -> string_of_uop o ^ string_of_expr e
+  | Binop(e1, o, e2) ->
+    "(" ^ string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2 ^ ")"
+  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  | Call(f, el) ->
+      f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+  | Subscription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
+  | Noexpr -> ""
+  | Afunc(t, bl, s) -> "lambda: " ^ string_of_typ t ^ " (" ^ String.concat ", " 
+    (List.map string_of_bind bl) ^ ")\n{\n" ^ "string_of_stmt s" ^ "}"
+  (* TODO: printing of stmt in lambdas is not implemented *)
+
 let rec string_of_stmt stmt = 
-  let rec string_of_expr = function
-    | IntLit(l) -> string_of_int l
-    | FloatLit(l) -> string_of_float l
-    | CharLit(l) -> Char.escaped l
-    | BoolLit(true) -> "true"
-    | BoolLit(false) -> "false"
-    | ArrayLit(el) -> "[" ^ String.concat "," (List.map string_of_expr el) ^ "]"
-    | Id(s) -> s
-    | Unop (o, e) -> string_of_uop o ^ string_of_expr e
-    | Binop(e1, o, e2) ->
-      "(" ^ string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2 ^ ")"
-    | Assign(v, e) -> v ^ " = " ^ string_of_expr e
-    | Call(f, el) ->
-        f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-    | Subsription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
-    | Noexpr -> ""
-    | Afunc(t, bl, s) -> "lambda: " ^ string_of_typ t ^ " (" ^ String.concat ", " 
-      (List.map string_of_bind bl) ^ ")\n" ^ string_of_stmt s ^ "\n" in
 
   match stmt with
   | Bstmt(b) -> string_of_bind b ^ "\n"
@@ -140,8 +142,7 @@ let rec string_of_stmt stmt =
     string_of_expr e3 ^ ") " ^ string_of_stmt s
   | Continue -> "continue;"
   | Break -> "break;"
-  | Func(b, bl, s) -> 
-    "function " ^ string_of_bind b ^ " (" ^ String.concat ", " 
+  | Func(b, bl, s) -> "function " ^ string_of_bind b ^ " (" ^ String.concat ", " 
     (List.map string_of_bind bl) ^ ")\n" ^ string_of_stmt s ^ "\n"
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
