@@ -15,33 +15,27 @@ let check program =
   let globals = Hashtbl.create 1000 in
 
   (* Verify a list of bindings has no duplicate names *)
-  let check_binds (kind : string) (binds : (typ * string) list )=
+  let check_binds (kind : string) (binds : bind list)=
     let rec dups = function
-        [] -> ()
-      |	((_,n1) :: (_,n2) :: _) when n1 = n2 ->
+      | [] -> ()
+      |	(Bind(_, n1) :: Bind(_, n2) :: _) when n1 = n2 ->
         raise (Failure ("duplicate " ^ kind ^ " " ^ n1))
       | _ :: t -> dups t
-    in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds)
+    in 
+    let comp_f b1 b2 = match (b1, b2) with 
+      | ((Bind(_, n1)), (Bind(_, n2))) -> compare n1 n2
+    in
+    dups (List.sort comp_f binds)
   in
 
   (* Collect function declarations for built-in functions: no bodies *)
-  
-  Hashtbl.add built_in_decls "print" {
-    rtyp = Int;
-    fname = "print";
-    formals = [(Int, "x")]; 
-    locals = [];
-    body = Expr(Noexpr) };
-  
-  Hashtbl.add function_decls "print" {
-    rtyp = Int;
-    fname = "print";
-    formals = [(Int, "x")]; 
-    locals = [];
-    body = Expr(Noexpr) };
+  Hashtbl.add built_in_decls "print" 
+    (Func(Bind(Int, "print"), [Bind(Int, "x")], Expr(Noexpr)));
+  Hashtbl.add built_in_decls "print_line" 
+    (Func(Bind(Int, "print_line"), [Bind(Int, "x")], Expr(Noexpr)));
 
   (* Add function name to symbol table *)
-  let add_func fd =
+  (* let add_func fd = 
     let built_in_err = "function " ^ fd.fname ^ " may not be defined"
     and dup_err = "duplicate function " ^ fd.fname
     and make_err er = raise (Failure er)
@@ -50,6 +44,17 @@ let check program =
       _ when Hashtbl.mem built_in_decls n -> make_err built_in_err
     | _ when Hashtbl.mem function_decls n -> make_err dup_err
     | _ ->  Hashtbl.add function_decls n fd; true 
+  in *)
+  let add_func func =
+    let Func(Bind(_, name), _, _) = func in
+    let built_in_err = "function " ^ name ^ " may not be defined"
+    and dup_err = "duplicate function " ^ name
+    and make_err er = raise (Failure er)
+    and n = name (* Name of the function *) in 
+    match func with (* No duplicate functions or redefinitions of built-ins *)
+      | _ when Hashtbl.mem built_in_decls n -> make_err built_in_err
+      | _ when Hashtbl.mem function_decls n -> make_err dup_err
+      | Func(b, bl, s) ->  Hashtbl.add function_decls n (Func(b, bl, s)); true 
   in
 
   (* Collect all function names into one symbol table *)
@@ -62,7 +67,7 @@ let check program =
   in
 
   (* Return a function from our symbol table *)
-  let find_func s=
+  let find_func s =
     if Hashtbl.mem function_decls s then Hashtbl.find function_decls s
     else try Hashtbl.find built_in_decls s
     with Not_found -> raise (Failure ("unrecognized function " ^ s))
@@ -79,8 +84,6 @@ let check program =
     else raise (Failure err)
   in
 
-  
-
   (* return a semantically checked statement list *)
   let rec check_stmt_list s globalvars localvars rettyp =
     match s with
@@ -96,11 +99,16 @@ let check program =
     (* A block is correct if each statement is correct and nothing
       follows any Return statement.  Nested blocks are flattened. *)
     | Block(b) -> SBlock(check_stmt_list b globalvars localvars rettyp)
-    | Bstmt(t, id) -> 
+    | Bstmt(Bind(t, id)) -> 
       if Hashtbl.mem localvars id then raise(Failure ("duplicate variable declaration: " ^ id))
       else let _ = Hashtbl.add localvars id t in
-      SBstmt(t, id)
-    | Expr e -> SExpr (check_expr e globalvars localvars)
+      SBstmt(Bind(t, id))
+    | BAstmt(b, e) -> 
+      let Bind(t, id) = b in
+      let _ = check_stmt (Bstmt(b)) globalvars localvars Void in
+      let _, sx = check_expr (Assign(id, e)) globalvars localvars in
+      SBAstmt(b, sx)
+    | Expr(e) -> SExpr(check_expr e globalvars localvars)
     | If(e, st1, st2) ->
       SIf(check_bool_expr e globalvars localvars, check_stmt st1 globalvars localvars rettyp, check_stmt st2 globalvars localvars rettyp)
     | While(e, st) ->
@@ -109,7 +117,7 @@ let check program =
       SFor(check_expr e1 globalvars localvars, check_expr e2 globalvars localvars, check_expr e3 globalvars localvars, check_stmt st globalvars localvars rettyp)
     | Continue -> SContinue
     | Break -> SBreak
-    | Func(f) -> SFunc(check_func f globalvars localvars)
+    | Func(b, bl, s) as f -> check_func f globalvars localvars
     | Return e -> 
       let (t, e') = check_expr e globalvars localvars in
       if t = rettyp then SReturn (t, e')
@@ -117,11 +125,11 @@ let check program =
           Failure ("return gives " ^ string_of_typ t ^ " expected " ^
                   string_of_typ rettyp ^ " in " ^ string_of_expr e))
       (* TODO: need to check that return val matches declared return val ? maybe done*)
-      
-     (* Return a semantically-checked expression, i.e., with a type *)
+
+  (* Return a semantically-checked expression, i.e., with a type *)
   and check_expr ex globalvars localvars =
     match ex with
-    IntLit l -> (Int, SIntLit l)
+    | IntLit l -> (Int, SIntLit l)
     | BoolLit l -> (Bool, SBoolLit l)
     | CharLit l -> (Char, SCharLit l)
     | FloatLit l -> (Float, SFloatLit l)
@@ -195,70 +203,63 @@ let check program =
         raise(Failure err)
       else
       (Int, SSubscription(a, (Int, e'))) (* TODO... I think this is done? *)
-    | Afunc(rt, bl, st) -> 
-        let f = {
-          rtyp = rt;
-          fname = "anon";
-          formals = bl;
-          locals = [];
-          body = st;
-        } 
-        in 
-        let retfn = check_func f globalvars localvars in
-        let rec tlist l =
-          match  l with
-          | [] -> []
-          | (x,y)::t -> x :: tlist t
-        in
-        (Ftyp{ rtyp=rt; intypes=tlist bl;}, SAfunc( rt, bl, retfn.sbody)) (*TODO fix intypes*)
-  
+    | Afunc(rt, bl, s) -> 
+      let f = Func(Bind(rt, "anon"), bl, s) in
+      let SFunc(_, _, sbody) = check_func f globalvars localvars in
+      let rec tlist = function
+        | [] -> []
+        | Bind(x, _) :: t -> x :: tlist t
+      in
+      (Ftyp(rt, tlist bl), SAfunc(rt, bl, sbody))
+
   and check_bool_expr e globalvars localvars =
     let (t, e') = check_expr e globalvars localvars in
     match t with
     | Bool -> (t, e')
     |  _ -> raise (Failure ("expected Boolean expression in " ^ string_of_expr e))
-  
+
   and check_call fname args call globalvars localvars = 
-    if Hashtbl.mem localvars fname then
+    if Hashtbl.mem localvars fname then 
       let ty = Hashtbl.find localvars fname in
       match ty with
-      | Ftyp(ft) -> 
-          if List.length args != List.length ft.intypes then 
-              raise (Failure ("expecting " ^ string_of_int (List.length args) ^
-              " arguments in " ^ string_of_expr call))
-            else let check_c ft e =
-              let (et, e') = check_expr e globalvars localvars in
-              let err = "illegal argument found " ^ string_of_typ et ^
-                        " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
-              in (check_assign ft et err, e')
-            in
-            let args' = List.map2 check_c ft.intypes args
-            in (ft.rtyp, SCall(fname, args'))
+      | Ftyp(rt, tl) -> 
+        if List.length args != List.length tl then 
+          raise (Failure ("expecting " ^ string_of_int (List.length args) ^
+          " arguments in " ^ string_of_expr call))
+        else let check_c ft e =
+          let (et, e') = check_expr e globalvars localvars in
+          let err = "illegal argument found " ^ string_of_typ et ^
+                    " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
+          in (check_assign ft et err, e')
+        in
+        let args' = List.map2 check_c tl args
+        in (rt, SCall(fname, args'))
       | _ -> raise(Failure "invalid call")
     else
-      let fd = find_func fname in
-      let param_length = List.length fd.formals in
+      let Func(Bind(rt, fnam), formals, s) = find_func fname in
+      let param_length = List.length formals in
       if List.length args != param_length then
         raise (Failure ("expecting " ^ string_of_int param_length ^
                         " arguments in " ^ string_of_expr call))
-      else let check_c (ft, _) e =
-              let (et, e') = check_expr e globalvars localvars in
-              let err = "illegal argument found " ^ string_of_typ et ^
-                        " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
-              in (check_assign ft et err, e')
+      else let check_c (Bind(ft, _)) e =
+          let (et, e') = check_expr e globalvars localvars in
+          let err = "illegal argument found " ^ string_of_typ et ^
+                    " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
+          in (check_assign ft et err, e')
         in
-        let args' = List.map2 check_c fd.formals args
-        in (fd.rtyp, SCall(fname, args'))
+        let args' = List.map2 check_c formals args
+        in (rt, SCall(fname, args'))
 
 
   (* return semantically checked function *)
-  and check_func func globalvars localvars =
-      
+  and check_func ftyp globalvars localvars =
+
     (* add function name to set of function names *)
-    let _ = add_func func in
+    let _ = add_func ftyp in
 
     (* Make sure no formals are void or duplicates *)
-    let _ = check_binds "formal" func.formals in
+    let Func(Bind(rt, fname), formals, body) = ftyp in
+    let _ = check_binds "formal" formals in
 
     (* create a new "global" scope with variables outside of current scope *)
     let funglobals = Hashtbl.copy globalvars in
@@ -267,16 +268,10 @@ let check program =
 
     (* create local scope and fill with formals, locally scoped vars can't be redefined but globals can *)
     let locals = Hashtbl.create 1000 in
-    let _ = List.map (fun (ty, name) -> Hashtbl.add locals name ty) (func.formals ) in
-    
-    let retbody = check_stmt func.body funglobals locals func.rtyp
+    let _ = List.map (fun (Bind(ty, name)) -> Hashtbl.add locals name ty) formals in
 
-  in
-    (* body of check_func *)
-    { srtyp = func.rtyp;
-      sfname = func.fname;
-      sformals = func.formals;
-      slocals = [];
-      sbody = retbody;
-    }
+    let retbody = check_stmt body funglobals locals rt
+
+    in SFunc(Bind(rt, fname), formals, retbody)
+
   in check_stmt_list program globals globals Void 

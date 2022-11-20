@@ -5,12 +5,12 @@ type op =
 type uop = Not
 
 type typ_const =  Int_const | Bool_const | Char_const | Float_const | Void_const
-type ftyp = typ * typ list
-and typ = 
+(* type ftyp = typ * typ list *)
+type typ = 
   | Int | Bool | Float | Char | Void 
   | Arr of typ 
   | Const of typ_const 
-  | Ftyp of ftyp
+  | Ftyp of typ * typ list
   | Dyn 
 
 (* int x: name binding *)
@@ -124,15 +124,15 @@ let rec string_of_expr = function
   | Subscription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
   | Noexpr -> ""
   | Afunc(t, bl, s) -> "lambda: " ^ string_of_typ t ^ " (" ^ String.concat ", " 
-    (List.map string_of_bind bl) ^ ")\n{\n" ^ "string_of_stmt s" ^ "}"
+    (List.map string_of_bind bl) ^ ") {\n" ^ string_of_stmt s ^ "}"
   (* TODO: printing of stmt in lambdas is not implemented *)
 
-let rec string_of_stmt stmt = 
+and string_of_stmt stmt = 
 
   match stmt with
   | Bstmt(b) -> string_of_bind b ^ "\n"
-  | BAstmt(Bind(t, s), e) -> 
-    string_of_bind (Bind(t, s)) ^ "\n" ^ string_of_expr (Assign(s, e)) ^ "\n"
+  | BAstmt(Bind(t, n), e) -> 
+    string_of_bind (Bind(t, n)) ^ "\n" ^ string_of_expr (Assign(n, e)) ^ "\n"
   | Block(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
