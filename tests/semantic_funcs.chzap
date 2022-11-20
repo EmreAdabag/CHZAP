@@ -1,27 +1,20 @@
 /* CHZAP functions */
 
 int a;
+int b = a + 1;
 
 float add_f(float a, float b) {
     return a + b;
 }
 
 float sum_thing(int a, int b, function(float, float) -> float f) {
-    float c;
-    float d;
-    c = 1.0;
-    d = 2.0;
+    float c = 1.0;
+    float d = 2.0;
     return f(c, d) + a + b;
 }
 
 function(void) -> int func_decl;
 
-
-int main() {
-    int a;
-    a = 2;
-
-    sum_thing(a, 3, function(float x, float y) -> float { return x + y; });
-}
-
-// there must be a new line at the end of file
+int c = 2;
+function(float x, float y) -> float { return x + y; };
+sum_thing(c, 3, function(float x, float y) -> float { return x + y; });
