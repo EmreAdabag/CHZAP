@@ -205,7 +205,12 @@ let check program =
         } 
         in 
         let retfn = check_func f globalvars localvars in
-        (Ftyp{ rtyp=rt; intypes=[Int];}, SAfunc( rt, bl, retfn.sbody)) (*TODO fix intypes*)
+        let rec tlist l =
+          match  l with
+          | [] -> []
+          | (x,y)::t -> x :: tlist t
+        in
+        (Ftyp{ rtyp=rt; intypes=tlist bl;}, SAfunc( rt, bl, retfn.sbody)) (*TODO fix intypes*)
   
   and check_bool_expr e globalvars localvars =
     let (t, e') = check_expr e globalvars localvars in
@@ -221,7 +226,14 @@ let check program =
           if List.length args != List.length ft.intypes then 
               raise (Failure ("expecting " ^ string_of_int (List.length args) ^
               " arguments in " ^ string_of_expr call))
-          else (ft.rtyp, SCall(fname, []))
+            else let check_c ft e =
+              let (et, e') = check_expr e globalvars localvars in
+              let err = "illegal argument found " ^ string_of_typ et ^
+                        " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
+              in (check_assign ft et err, e')
+            in
+            let args' = List.map2 check_c ft.intypes args
+            in (ft.rtyp, SCall(fname, args'))
       | _ -> raise(Failure "invalid call")
     else
       let fd = find_func fname in

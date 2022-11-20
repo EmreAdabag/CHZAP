@@ -65,9 +65,10 @@ let rec string_of_sexpr (t, e) =
           f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
       | SSubscription(a, e) -> a ^ "[" ^ string_of_sexpr e ^ "]" 
       | SNoexpr -> ""
+      | SAfunc(rt, bl, bo) -> "{" ^ string_of_sstmt bo ^ "}"
   ) ^ ")"
       
-let rec string_of_sstmt = function
+and string_of_sstmt = function
   SBstmt(b) -> string_of_typ (fst b) ^ " " ^ snd b ^ ";\n"
   |SBlock(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_sstmt stmts) ^ "}\n"
