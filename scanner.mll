@@ -7,6 +7,7 @@ let digit = ['0'-'9']
 let floatnumber = (digit+ '.' digit+)
 let whitespace = [' ' '\r' '\t' '\n']
 
+
 rule token = parse
 whitespace { token lexbuf }
 (* | newline { token lexbuf} *)
@@ -54,6 +55,7 @@ whitespace { token lexbuf }
 (* | "true" { TRUE }
 | "false" { FALSE } *)
 
+
 (* types *)
 | "bool" { BOOL }
 | "char" { CHAR }
@@ -63,6 +65,7 @@ whitespace { token lexbuf }
 | "void" { VOID } 
 | "const" { CONST }
 | "function" { FUNC }
+
 
 (* literals *)
 | "true" { BOOL_LITERAL(true) }
@@ -74,7 +77,6 @@ whitespace { token lexbuf }
 
 | eof    { EOF }
 | _ as c { raise (Failure("illegal character " ^ Char.escaped c)) }
-
 
 
 and multi_comment level = parse
