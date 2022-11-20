@@ -48,7 +48,8 @@ program:
 
 decls:
    /* nothing */ { ([], [])               }
- | vdecl SEMI decls { (($1 :: fst $3), snd $3) }
+//  | vdecl SEMI decls { (($1 :: fst $3), snd $3) }
+ | vdeclplus SEMI decls { (($1 :: fst $3), snd $3) }
  | fdecl decls { (fst $2, ($1 :: snd $2)) }
 
 fdecl:
@@ -79,6 +80,14 @@ vdecl_list:
 /* int x */
 vdecl:
   typ ID { ($1, $2) }
+
+vdeclplus_list:
+  /*nothing*/ { [] }
+  | vdeclplus SEMI vdeclplus_list  {  $1 :: $3 }
+
+/* int x = 1 */
+vdeclplus:
+  typ ID ASSIGN expr { ($1, $2, $4) }
 
 typ:
     INT   { Int  }
@@ -122,6 +131,10 @@ expr_opt:
   /* nothing */ { Noexpr }
 | expr { $1 }
 
+assign:
+  | typ ID EQ expr { LongAssign ($1, $2, $4) }
+  | ID EQ expr     { ShortAssign ($1, $3) }
+
 expr:
 //EQ+ NEQ+ LT+ LEQ GT GEQ BWAND BWOR NOT AND OR
   | INT_LITERAL       { IntLit($1) }
@@ -147,7 +160,8 @@ expr:
   | expr AND expr     { Binop($1, And, $3) }
   | expr OR expr      { Binop($1, Or, $3) }
   | NOT expr          { Unop(Not, $2) }
-  | ID ASSIGN expr    { Assign($1, $3) }
+  // | ID ASSIGN expr    { Assign($1, $3) }
+  | assign    { Assign($1) }
    /* call */
   | ID LPAREN args_opt RPAREN { Call ($1, $3)  }
   | LPAREN expr RPAREN          { $2 }

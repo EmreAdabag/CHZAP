@@ -18,11 +18,14 @@ type expr =
   | Id of string
   | Binop of expr * op * expr
   | Unop of uop * expr
-  | Assign of string * expr
+  | Assign of assign
   | Subscription of string * expr
   (* function call *)
   | Call of string * expr list
   | Noexpr
+  and assign = 
+    LongAssign of typ * string * expr
+    | ShortAssign of string * expr
 
 type stmt =
   | Block of stmt list
@@ -37,6 +40,8 @@ type stmt =
 
 (* int x: name binding *)
 type bind = typ * string
+(* int x = 1: full declaration binding *)
+type bindplus = typ * string * expr
 
 (* func_def: ret_typ fname formals locals body *)
 type func_def = {
@@ -47,7 +52,8 @@ type func_def = {
   body: stmt list;
 }
 
-type program = bind list * func_def list
+(* type program = bind list * func_def list *)
+type program = bindplus list * func_def list
 
 (* Pretty-printing functions *)
 let string_of_op = function
@@ -71,6 +77,23 @@ let string_of_op = function
 let string_of_uop = function
    Not -> "!"
 
+let  string_of_const_typ = function
+  Int_const -> "int"
+  | Bool_const -> "bool"
+  | Char_const -> "char"
+  | Float_const -> "float"
+  | Void_const -> "void"
+
+let rec string_of_typ = function
+   Int -> "int"
+ | Bool -> "bool"
+ | Char -> "char"
+ | String -> "string"
+ | Float -> "float"
+ | Arr(t) -> string_of_typ t ^ "[]"
+ | Const(t) ->"const " ^ string_of_const_typ t 
+ | Void -> "void"
+
 let rec string_of_expr = function
   | IntLit(l) -> string_of_int l
   | FloatLit(l) -> string_of_float l
@@ -83,11 +106,15 @@ let rec string_of_expr = function
   | Unop (o, e) -> string_of_uop o ^ string_of_expr e
   | Binop(e1, o, e2) ->
     string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
-  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  (* | Assign(v, e) -> v ^ " = " ^ string_of_expr e *)
+  | Assign(a) -> string_of_assign a
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | Subscription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"
   | Noexpr -> ""
+  and string_of_assign = function
+    | LongAssign(t, v, e) -> string_of_typ t ^ v ^ " = " ^ string_of_expr e
+    | ShortAssign(v, e) -> v ^ " = " ^ string_of_expr e
 
 let rec string_of_stmt = function
   | Block(stmts) ->
@@ -103,15 +130,15 @@ let rec string_of_stmt = function
 
 
 
-let  string_of_const_typ = function
+(* let  string_of_const_typ = function
 Int_const -> "int"
 | Bool_const -> "bool"
 | Char_const -> "char"
 | Float_const -> "float"
-| Void_const -> "void"
+| Void_const -> "void" *)
 
 
-let rec string_of_typ = function
+(* let rec string_of_typ = function
     Int -> "int"
   | Bool -> "bool"
   | Char -> "char"
@@ -119,13 +146,15 @@ let rec string_of_typ = function
   | Float -> "float"
   | Arr(t) -> string_of_typ t ^ "[]"
   | Const(t) ->"const " ^ string_of_const_typ t 
-  | Void -> "void"
+  | Void -> "void" *)
 
 
 
 
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
+
+let string_of_vdeclplus (t, id, e) = string_of_typ t ^ " " ^ id ^ string_of_expr e ^ ";\n"
 
 let string_of_fdecl fdecl =
   string_of_typ fdecl.rtyp ^ " " ^
@@ -137,5 +166,6 @@ let string_of_fdecl fdecl =
 
 let string_of_program (vars, funcs) =
   "\n\nParsed program: \n\n" ^
-  String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
+  (* String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^ *)
+  String.concat "" (List.map string_of_vdeclplus vars) ^ "\n" ^
   String.concat "\n" (List.map string_of_fdecl funcs)
