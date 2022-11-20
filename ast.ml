@@ -58,6 +58,7 @@ and func_def = {
   rtyp: typ;
   fname: string;
   formals: bind list;
+  locals: bind list;
   body: stmt;
 }
 

@@ -30,12 +30,14 @@ let check program =
     rtyp = Int;
     fname = "print";
     formals = [(Int, "x")]; 
+    locals = [];
     body = Expr(Noexpr) };
   
   Hashtbl.add function_decls "print" {
     rtyp = Int;
     fname = "print";
     formals = [(Int, "x")]; 
+    locals = [];
     body = Expr(Noexpr) };
 
   (* Add function name to symbol table *)
@@ -52,11 +54,10 @@ let check program =
 
   (* Collect all function names into one symbol table *)
 
-  (* Return a variable from our local symbol table *)
-  let type_of_identifier s symbols =
-    if Hashtbl.mem globals s then
-      Hashtbl.find globals s else
-    try Hashtbl.find symbols s
+  (* Return a variable from an input hash table *)
+  let type_of_identifier s globalvars localvars =
+    if Hashtbl.mem localvars s then Hashtbl.find localvars s else
+    try Hashtbl.find globalvars s
     with Not_found -> raise (Failure ("undeclared identifier " ^ s))
   in
 
@@ -81,9 +82,45 @@ let check program =
 
   
 
+  (* return a semantically checked statement list *)
+  let rec check_stmt_list s globalvars localvars rettyp =
+    match s with
+      [] -> []
+    | Block sl :: sl'  -> check_stmt_list (sl @ sl') globalvars localvars rettyp (* Flatten blocks *)
+    | s :: sl -> let a = check_stmt s globalvars localvars rettyp in a :: check_stmt_list sl globalvars localvars rettyp 
+  
+    (* | Block sl -> SBlock(check_stmt_list sl svars) (* Flatten blocks *) *)
 
-   (* Return a semantically-checked expression, i.e., with a type *)
-  let rec check_expr ex svars =
+  (* Returns (semantically-checked statement, map of t i.e. containing sexprs *)
+  and check_stmt (s:stmt) globalvars localvars rettyp =
+    match s with
+    (* A block is correct if each statement is correct and nothing
+      follows any Return statement.  Nested blocks are flattened. *)
+    | Block(b) -> SBlock(check_stmt_list b globalvars localvars rettyp)
+    | Bstmt(t, id) -> 
+      if Hashtbl.mem localvars id then raise(Failure ("duplicate variable declaration: " ^ id))
+      else let _ = Hashtbl.add localvars id t in
+      SBstmt(t, id)
+    | Expr e -> SExpr (check_expr e globalvars localvars)
+    | If(e, st1, st2) ->
+      SIf(check_bool_expr e globalvars localvars, check_stmt st1 globalvars localvars rettyp, check_stmt st2 globalvars localvars rettyp)
+    | While(e, st) ->
+      SWhile(check_bool_expr e globalvars localvars, check_stmt st globalvars localvars rettyp)
+    | For(e1, e2, e3, st) ->
+      SFor(check_expr e1 globalvars localvars, check_expr e2 globalvars localvars, check_expr e3 globalvars localvars, check_stmt st globalvars localvars rettyp)
+    | Continue -> SContinue
+    | Break -> SBreak
+    | Func(f) -> SFunc(check_func f globalvars localvars)
+    | Return e -> 
+      let (t, e') = check_expr e globalvars localvars in
+      if t = rettyp then SReturn (t, e')
+      else raise (
+          Failure ("return gives " ^ string_of_typ t ^ " expected " ^
+                  string_of_typ rettyp ^ " in " ^ string_of_expr e))
+      (* TODO: need to check that return val matches declared return val ? maybe done*)
+      
+     (* Return a semantically-checked expression, i.e., with a type *)
+  and check_expr ex globalvars localvars =
     match ex with
     IntLit l -> (Int, SIntLit l)
     | BoolLit l -> (Bool, SBoolLit l)
@@ -94,27 +131,26 @@ let check program =
       | [] -> (Arr Void, SArrayLit [])          (* empty list literal *)
       | hd::tl ->
           let typecheck typ expr = 
-            let t, e' = check_expr expr svars in
+            let t, e' = check_expr expr globalvars localvars in
             if t != typ then 
               let err = "inconsistent array " ^ string_of_expr (ArrayLit l) in
               raise(Failure err)
             else (t, e')
           in
-          let hd_type, _ = check_expr hd svars in
+          let hd_type, _ = check_expr hd globalvars localvars in
           let listcheck = typecheck hd_type in
           (Arr hd_type, SArrayLit (List.map listcheck l))
         in res
-    | Id var -> (type_of_identifier var svars, SId var)
+    | Id var -> (type_of_identifier var globalvars localvars, SId var)
     | Assign(var, e) as ex ->
-      let lt = type_of_identifier var svars
-      and (rt, e') = check_expr e svars in
-      let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^
+      let ty = type_of_identifier var globalvars localvars
+      and (rt, e') = check_expr e globalvars localvars in
+      let err = "illegal assignment " ^ string_of_typ ty ^ " = " ^
                 string_of_typ rt ^ " in " ^ string_of_expr ex
       in
-      (check_assign lt rt err, SAssign(var, (rt, e')))
-
+      (check_assign ty rt err, SAssign(var, (rt, e')))
     | Unop(op, e) -> 
-      let t, e' = check_expr e svars in 
+      let t, e' = check_expr e globalvars localvars in 
       let err = "illegal unary operator " ^ 
                 string_of_uop op ^ string_of_typ t ^ " in " ^ 
                 string_of_expr e
@@ -125,8 +161,8 @@ let check program =
       in
       (ty, SUnop(op, (t, e')))
     | Binop(e1, op, e2) as e ->
-      let (t1, e1') = check_expr e1 svars
-      and (t2, e2') = check_expr e2 svars in
+      let (t1, e1') = check_expr e1 globalvars localvars
+      and (t2, e2') = check_expr e2 globalvars localvars in
       let err = "illegal binary operator " ^
                 string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
                 string_of_typ t2 ^ " in " ^ string_of_expr e
@@ -158,7 +194,7 @@ let check program =
         raise (Failure ("expecting " ^ string_of_int param_length ^
                         " arguments in " ^ string_of_expr call))
       else let check_call (ft, _) e =
-              let (et, e') = check_expr e svars in
+              let (et, e') = check_expr e globalvars localvars in
               let err = "illegal argument found " ^ string_of_typ et ^
                         " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
               in (check_assign ft et err, e')
@@ -167,59 +203,33 @@ let check program =
         in (fd.rtyp, SCall(fname, args'))
     | Noexpr -> (Int, SNoexpr)
     | Subscription(a, e) -> 
-      let (t', e') = check_expr e svars in
+      let (t', e') = check_expr e globalvars localvars in
       if t' != Int then 
         let err = "array indicies must be integers, not " ^ string_of_typ t' in
         raise(Failure err)
       else
       (Int, SSubscription(a, (Int, e'))) (* TODO... I think this is done? *)
+    | Afunc(ty, tl, rt) -> 
+        let f = {
+          rtyp = ty;
+          fname = "anon";
+          formals = bl;
+          locals = [];
+          body = st;
+        } 
+        in 
+        let retfn = check_func f globalvars localvars in
+        SAfunc( , ty * bl * retfn.sbody)
   
-  and check_bool_expr e svars=
-    let (t, e') = check_expr e svars in
+  and check_bool_expr e globalvars localvars =
+    let (t, e') = check_expr e globalvars localvars in
     match t with
     | Bool -> (t, e')
     |  _ -> raise (Failure ("expected Boolean expression in " ^ string_of_expr e))
-  in
-
-  (* return a semantically checked statement list *)
-  let rec check_stmt_list s svars =
-    match s with
-      [] -> []
-    | Block sl :: sl'  -> check_stmt_list (sl @ sl') svars (* Flatten blocks *)
-    | s :: sl -> check_stmt s svars :: check_stmt_list sl svars
   
-  
-  (* Returns (semantically-checked statement, map of t i.e. containing sexprs *)
-  and check_stmt (s:stmt) svars =
-    match s with
-    (* A block is correct if each statement is correct and nothing
-      follows any Return statement.  Nested blocks are flattened. *)
-    | Expr e -> SExpr (check_expr e svars)
-    | Bstmt(t, id) -> 
-      let _ = match id with
-      | _ when Hashtbl.mem svars id -> raise(Failure "duplicate variable declaration")
-      | _ -> Hashtbl.add svars id t
-      in SBstmt(t, id)
-    | If(e, st1, st2) ->
-      SIf(check_bool_expr e svars, check_stmt st1 svars, check_stmt st2 svars)
-    | While(e, st) ->
-      SWhile(check_bool_expr e svars, check_stmt st svars)
-    | For(e1, e2, e3, st) ->
-      SFor(check_expr e1 svars, check_expr e2 svars, check_expr e3 svars, check_stmt st svars)
-    | Continue -> SContinue
-    | Break -> SBreak
-    | Return e -> 
-      let (t, e') = check_expr e svars in
-      SReturn(t, e')
-      (* TODO: need to check that return val matches declared return val *)
-      (* if t = func.rtyp then SReturn (t, e')
-      else raise (
-          Failure ("return gives " ^ string_of_typ t ^ " expected " ^
-                  string_of_typ func.rtyp ^ " in " ^ string_of_expr e)) *)
-    | Func(f) -> check_func f svars
 
   (* return semantically checked function *)
-  and check_func func svars =
+  and check_func func globalvars localvars =
       
     (* add function name to set of function names *)
     let _ = add_func func in
@@ -227,16 +237,23 @@ let check program =
     (* Make sure no formals are void or duplicates *)
     let _ = check_binds "formal" func.formals in
 
-    let symbols = Hashtbl.copy svars in
+    (* create a new "global" scope with variables outside of current scope *)
+    let funglobals = Hashtbl.copy globalvars in
+    let add_fn k v = Hashtbl.add funglobals k v in
+    let _ = Hashtbl.iter add_fn localvars in
 
-    (* Build local symbol table of variables for this function *)
-    let _ = List.map (fun (ty, name) -> Hashtbl.add symbols name ty) (func.formals ) 
+    (* create local scope and fill with formals, locally scoped vars can't be redefined but globals can *)
+    let locals = Hashtbl.create 1000 in
+    let _ = List.map (fun (ty, name) -> Hashtbl.add locals name ty) (func.formals ) in
+    
+    let retbody = check_stmt func.body funglobals locals func.rtyp
 
   in
     (* body of check_func *)
-    SFunc({ srtyp = func.rtyp;
+    { srtyp = func.rtyp;
       sfname = func.fname;
       sformals = func.formals;
-      sbody = check_stmt func.body symbols;
-    })
-  in check_stmt_list program globals
+      slocals = [];
+      sbody = retbody;
+    }
+  in check_stmt_list program globals globals Void 

@@ -157,6 +157,7 @@ typ ID LPAREN formals_list RPAREN stmt
   rtyp=$1;
   fname=$2;
   formals=$4;
+  locals=[];
   body=$6
   }
 }

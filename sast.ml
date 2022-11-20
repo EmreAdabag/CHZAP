@@ -39,6 +39,7 @@ and sfunc_def = {
   srtyp: typ;
   sfname: string;
   sformals: bind list;
+  slocals: bind list;
   sbody: sstmt;
 }
 
@@ -67,7 +68,7 @@ let rec string_of_sexpr (t, e) =
   ) ^ ")"
       
 let rec string_of_sstmt = function
-  SBstmt(b) -> string_of_typ (fst b) ^ ": " ^ snd b
+  SBstmt(b) -> string_of_typ (fst b) ^ " " ^ snd b ^ ";\n"
   |SBlock(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_sstmt stmts) ^ "}\n"
   | SExpr(expr) -> string_of_sexpr expr ^ ";\n"
@@ -78,6 +79,15 @@ let rec string_of_sstmt = function
   | SFor(e1, e2, e3, s) -> "for (" ^ string_of_sexpr e1 ^ "; " ^ string_of_sexpr e2 ^ "; " ^ string_of_sexpr e3 ^ ") " ^ string_of_sstmt s
   | SContinue -> "continue;\n"
   | SBreak -> "break;\n"
+  | SFunc(f) -> string_of_func f
+
+and string_of_func func =
+  string_of_typ func.srtyp ^ " " ^
+  func.sfname ^ "(" ^ String.concat ", " (List.map string_of_bind func.sformals) ^
+  ")\n"
+  ^ (string_of_sstmt func.sbody) ^
+  "\n"
+  
 
 let string_of_sprogram (sprogram) =
   "\n\nSementically checked program: \n\n" ^
