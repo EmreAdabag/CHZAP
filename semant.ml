@@ -62,9 +62,8 @@ let check program =
   in
 
   (* Return a function from our symbol table *)
-  let find_func s =
-    if Hashtbl.mem function_decls s then
-      Hashtbl.find function_decls s
+  let find_func s=
+    if Hashtbl.mem function_decls s then Hashtbl.find function_decls s
     else try Hashtbl.find built_in_decls s
     with Not_found -> raise (Failure ("unrecognized function " ^ s))
   in
@@ -187,20 +186,7 @@ let check program =
           | _ -> raise (Failure err)
         in
         (t, SBinop((t1, e1'), op, (t2, e2')))
-    | Call(fname, args) as call ->
-      let fd = find_func fname in
-      let param_length = List.length fd.formals in
-      if List.length args != param_length then
-        raise (Failure ("expecting " ^ string_of_int param_length ^
-                        " arguments in " ^ string_of_expr call))
-      else let check_call (ft, _) e =
-              let (et, e') = check_expr e globalvars localvars in
-              let err = "illegal argument found " ^ string_of_typ et ^
-                        " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
-              in (check_assign ft et err, e')
-        in
-        let args' = List.map2 check_call fd.formals args
-        in (fd.rtyp, SCall(fname, args'))
+    | Call(fname, args) as call -> check_call fname args call globalvars localvars
     | Noexpr -> (Int, SNoexpr)
     | Subscription(a, e) -> 
       let (t', e') = check_expr e globalvars localvars in
@@ -209,9 +195,9 @@ let check program =
         raise(Failure err)
       else
       (Int, SSubscription(a, (Int, e'))) (* TODO... I think this is done? *)
-    | Afunc(ty, tl, rt) -> 
+    | Afunc(rt, bl, st) -> 
         let f = {
-          rtyp = ty;
+          rtyp = rt;
           fname = "anon";
           formals = bl;
           locals = [];
@@ -219,7 +205,7 @@ let check program =
         } 
         in 
         let retfn = check_func f globalvars localvars in
-        SAfunc( , ty * bl * retfn.sbody)
+        (Ftyp{ rtyp=rt; intypes=[Int];}, SAfunc( rt, bl, retfn.sbody)) (*TODO fix intypes*)
   
   and check_bool_expr e globalvars localvars =
     let (t, e') = check_expr e globalvars localvars in
@@ -227,6 +213,31 @@ let check program =
     | Bool -> (t, e')
     |  _ -> raise (Failure ("expected Boolean expression in " ^ string_of_expr e))
   
+  and check_call fname args call globalvars localvars = 
+    if Hashtbl.mem localvars fname then
+      let ty = Hashtbl.find localvars fname in
+      match ty with
+      | Ftyp(ft) -> 
+          if List.length args != List.length ft.intypes then 
+              raise (Failure ("expecting " ^ string_of_int (List.length args) ^
+              " arguments in " ^ string_of_expr call))
+          else (ft.rtyp, SCall(fname, []))
+      | _ -> raise(Failure "invalid call")
+    else
+      let fd = find_func fname in
+      let param_length = List.length fd.formals in
+      if List.length args != param_length then
+        raise (Failure ("expecting " ^ string_of_int param_length ^
+                        " arguments in " ^ string_of_expr call))
+      else let check_c (ft, _) e =
+              let (et, e') = check_expr e globalvars localvars in
+              let err = "illegal argument found " ^ string_of_typ et ^
+                        " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
+              in (check_assign ft et err, e')
+        in
+        let args' = List.map2 check_c fd.formals args
+        in (fd.rtyp, SCall(fname, args'))
+
 
   (* return semantically checked function *)
   and check_func func globalvars localvars =
