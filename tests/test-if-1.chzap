@@ -1,0 +1,9 @@
+/* CHZAP ifelse */
+
+int a = 0;
+int b = 0;
+
+if (b < a)
+{ 
+  a = a - b;
+}

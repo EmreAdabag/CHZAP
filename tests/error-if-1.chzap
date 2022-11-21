@@ -1,0 +1,10 @@
+/* CHZAP ifelse */
+/* if condition not boolean */
+
+int a = 0;
+int b = 0;
+
+if (1 + 1)
+{ 
+  a = a - b;
+}

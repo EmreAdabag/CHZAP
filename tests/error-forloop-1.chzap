@@ -1,0 +1,6 @@
+/* CHZAP for loops */
+/* no condition in for loop */
+
+int a;
+roll (a = 0; ; a = a + 1) {
+}

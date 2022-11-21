@@ -1,0 +1,7 @@
+/* CHZAP exprs */
+/* cannot add int and float */
+
+int a = 1;
+float z = 1.0;
+
+a = a + z;

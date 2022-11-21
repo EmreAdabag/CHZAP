@@ -1,11 +1,9 @@
 /* CHZAP while */
+/* while condition not boolean */
 
-int a = 3;
-int b = 2;
-while (a <= b) {
-    a = a + 1;
-}
-while (a <= b) {
+int a = 1;
+int b = 4;
+while (a + b) {
     if (a > 3) continue;
     a = a + 1;
     if (a == 3) 

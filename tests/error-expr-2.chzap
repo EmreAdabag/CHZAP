@@ -1,0 +1,7 @@
+/* CHZAP exprs */
+/* assign int to boolean type */
+
+int a = 1;
+bool b = true;
+
+b = a;

@@ -1,0 +1,6 @@
+/* CHZAP for loops */
+/* declare variable illegally */
+
+int a;
+roll (a = 0; a < 10 ; int a = a + 1) {
+}
