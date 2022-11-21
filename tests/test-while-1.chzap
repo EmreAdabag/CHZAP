@@ -1,0 +1,7 @@
+/* CHZAP while */
+
+int a = 3;
+int b = 2;
+while (a <= b) {
+    a = a + 1;
+}

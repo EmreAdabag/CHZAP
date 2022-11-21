@@ -1,0 +1,5 @@
+/* CHZAP for loops */
+
+int a;
+roll (a = 0; a < 10 ; a = a + 1) {
+}

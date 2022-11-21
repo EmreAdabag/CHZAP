@@ -1,0 +1,15 @@
+/* CHZAP exprs */
+/* more variables */
+
+int a = 1;
+float z;
+bool k = true;
+const int l;
+char c;
+
+a = 3;
+z = 1.0;
+k = 1 < 5;
+k = false;
+k = true;
+c = 'c';

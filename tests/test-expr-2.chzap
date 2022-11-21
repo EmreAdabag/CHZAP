@@ -1,0 +1,8 @@
+/* CHZAP exprs */
+/* full variable declaration */
+
+int a = 1;
+float z = 1.0;
+bool k = true;
+const int l;
+char c = 'c';

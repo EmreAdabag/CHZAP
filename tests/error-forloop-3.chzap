@@ -1,0 +1,6 @@
+/* CHZAP for loops */
+/* undeclared variable in for loop head */
+
+int a;
+roll (b = 0; b < 10 ; b = a + 1) {
+}
