@@ -82,9 +82,19 @@ let check (program : stmt list) =
   (* Raise an exception if the given rvalue type cannot be assigned to
   the given lvalue type *)
   let check_assign (lvaluet : typ) (rvaluet : typ) (err : string) : typ =
-    if lvaluet = rvaluet then lvaluet 
-    else if rvaluet = Arr Void then lvaluet
-    else raise (Failure err)
+    match lvaluet, rvaluet with
+    (* regular *)
+    | _ when lvaluet = rvaluet -> lvaluet 
+    (* lvalue is const while rvalue is non-const *)
+    | Const(Int_const), Int -> Const(Int_const)
+    | Const(Bool_const), Bool -> Const(Bool_const)
+    | Const(Char_const), Char -> Const(Char_const)
+    | Const(Float_const), Float -> Const(Float_const)
+    | Const(Void_const), Void -> Const(Void_const)
+    (* arrays *)
+    | _, Arr Void -> lvaluet
+    (* error *)
+    | _ -> raise (Failure err)
   in
 
   (* return a semantically checked statement list *)
