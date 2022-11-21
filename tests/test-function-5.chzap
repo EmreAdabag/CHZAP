@@ -18,3 +18,4 @@ function(void) -> int func_decl;
 int c = 2;
 //function(float x, float y) -> float { return x + y; };
 sum_thing(c, 3, function(float x, float y) -> float { return x + y; });
+

@@ -1,0 +1,10 @@
+/* CHZAP functions */
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int sum(int a, int b, function(int, int) -> int f) {
+    return f(a, b);
+}
+// there must be a new line at the end of file

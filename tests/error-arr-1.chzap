@@ -1,0 +1,6 @@
+/* CHZAP arrays */
+/* idx out of bound */
+
+int[] arr;
+arr = [1, 2, 3];
+arr[3];

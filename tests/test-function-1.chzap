@@ -1,0 +1,6 @@
+/* CHZAP functions */
+
+int add(int a, int b) {
+    return a + b;
+}
+// there must be a new line at the end of file
