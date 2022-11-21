@@ -4,12 +4,11 @@ type op =
   Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr | Exp
 type uop = Not
 
-type typ_const =  Int_const | Bool_const | Char_const | Float_const | Void_const
 (* type ftyp = typ * typ list *)
 type typ = 
   | Int | Bool | Float | Char | Void 
   | Arr of typ 
-  | Const of typ_const 
+  | Const of typ 
   | Ftyp of typ * typ list
   | Dyn 
 
@@ -26,6 +25,7 @@ type expr =
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of string * expr
+  | CAssign of string * expr
   | Subscription of string * expr
   (* function call *)
   | Call of string * expr list
@@ -85,20 +85,13 @@ let string_of_op = function
 let string_of_uop = function
    Not -> "!"
 
-let string_of_const_typ = function
-  | Int_const -> "int"
-  | Bool_const -> "bool"
-  | Char_const -> "char"
-  | Float_const -> "float"
-  | Void_const -> "void"
-
 let rec string_of_typ = function
   | Int -> "int"
   | Bool -> "bool"
   | Char -> "char"
   | Float -> "float"
   | Arr(t) -> string_of_typ t ^ "[]"
-  | Const(t) ->"const " ^ string_of_const_typ t 
+  | Const(t) ->"const " ^ string_of_typ t 
   | Void -> "void"
   | Ftyp(t, tl) -> "function (" ^ String.concat ", " 
     (List.map string_of_typ tl) ^ ") -> " ^ string_of_typ t
@@ -119,6 +112,7 @@ let rec string_of_expr = function
   | Binop(e1, o, e2) ->
     "(" ^ string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2 ^ ")"
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  | CAssign(v, e) -> v ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | Subscription(a, e) -> a ^ "[" ^ string_of_expr e ^ "]"

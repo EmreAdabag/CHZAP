@@ -81,16 +81,16 @@ let check (program : stmt list) =
 
   (* Raise an exception if the given rvalue type cannot be assigned to
   the given lvalue type *)
-  let check_assign (lvaluet : typ) (rvaluet : typ) (err : string) : typ =
+  let check_assign (lvaluet : typ) (rvaluet : typ) (err : string) (is_bind : bool) : typ =
     match lvaluet, rvaluet with
+    (* lvalue is const while rvalue is non-const *)
+    | Const(t1), t2 -> 
+      if is_bind = true then match t1 with
+        Int | Bool | Char | Float | Void -> if t2 = t1 then Const(t1) else raise (Failure err)
+        | _ -> raise (Failure err)
+      else raise (Failure err)
     (* regular *)
     | _ when lvaluet = rvaluet -> lvaluet 
-    (* lvalue is const while rvalue is non-const *)
-    | Const(Int_const), Int -> Const(Int_const)
-    | Const(Bool_const), Bool -> Const(Bool_const)
-    | Const(Char_const), Char -> Const(Char_const)
-    | Const(Float_const), Float -> Const(Float_const)
-    | Const(Void_const), Void -> Const(Void_const)
     (* arrays *)
     | _, Arr Void -> lvaluet
     (* error *)
@@ -120,7 +120,10 @@ let check (program : stmt list) =
     | BAstmt(b, e) -> 
       let Bind(t, id) = b in
       let _ = check_stmt (Bstmt(b)) globalvars localvars Void in
-      let _, sx = check_expr (Assign(id, e)) globalvars localvars in
+      let _, sx = match t with
+        Const(t) -> check_expr (CAssign(id, e)) globalvars localvars 
+        | _ -> check_expr (Assign(id, e)) globalvars localvars 
+      in
       SBAstmt(b, sx)
     | Expr(e) -> SExpr(check_expr e globalvars localvars)
     | If(e, st1, st2) ->
@@ -169,7 +172,14 @@ let check (program : stmt list) =
       let err = "illegal assignment " ^ string_of_typ ty ^ " = " ^
                 string_of_typ rt ^ " in " ^ string_of_expr ex
       in
-      (check_assign ty rt err, SAssign(var, (rt, e')))
+      (check_assign ty rt err false, SAssign(var, (rt, e')))
+    | CAssign(var, e) as ex ->
+      let ty = type_of_identifier var globalvars localvars
+      and (rt, e') = check_expr e globalvars localvars in
+      let err = "illegal assignment " ^ string_of_typ ty ^ " = " ^
+                string_of_typ rt ^ " in " ^ string_of_expr ex
+      in
+      (check_assign ty rt err true, SAssign(var, (rt, e')))
     | Unop(op, e) -> 
       let t, e' = check_expr e globalvars localvars in 
       let err = "illegal unary operator " ^ 
@@ -245,7 +255,7 @@ let check (program : stmt list) =
           let (et, e') = check_expr e globalvars localvars in
           let err = "illegal argument found " ^ string_of_typ et ^
                     " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
-          in (check_assign ft et err, e')
+          in (check_assign ft et err false, e')
         in
         let args' = List.map2 check_c tl args
         in (rt, SCall(fname, args'))
