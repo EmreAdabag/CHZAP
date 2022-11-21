@@ -143,6 +143,7 @@ formals_list:
 
 stmt:
   // empty stmt
+  | SEMI { Expr(Noexpr) }
   | expr SEMI { Expr($1) }
   | LBRACE stmt_list RBRACE { Block($2) }
   // decls
@@ -152,8 +153,8 @@ stmt:
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
   | WHILE LPAREN expr RPAREN stmt           { While ($3, $5)  }
-  | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt { For($3, $5, $7, $9) }
-  | FOR LPAREN expr RPAREN stmt { For(Noexpr, $3, Noexpr, $5) }
+  | FOR LPAREN stmt expr SEMI expr_opt RPAREN stmt { For($3, $4, $6, $8) }
+  | FOR LPAREN expr RPAREN stmt { For(Expr(Noexpr), $3, Noexpr, $5) }
   | BREAK SEMI      { Break }
   | CONTINUE SEMI   { Continue }
   | RETURN expr_opt SEMI { Return($2) }

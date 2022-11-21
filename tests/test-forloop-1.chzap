@@ -1,7 +1,6 @@
 /* CHZAP for loops */
 
-int a;
 int b = 2;
-roll (a = 0; a < 10 ; a = a + 1) {
+roll (int a = 0; a < 10 ; a = a + 1) {
   b = b + 1;
 }

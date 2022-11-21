@@ -40,7 +40,7 @@ and stmt =
   | Block of stmt list
   | Expr of expr
   | If of expr * stmt * stmt
-  | For of expr * expr * expr * stmt 
+  | For of stmt * expr * expr * stmt 
   | While of expr * stmt
   | Continue
   | Break
@@ -132,7 +132,7 @@ and string_of_stmt stmt =
   match stmt with
   | Bstmt(b) -> string_of_bind b ^ "\n"
   | BAstmt(Bind(t, n), e) -> 
-    string_of_bind (Bind(t, n)) ^ "\n" ^ string_of_expr (Assign(n, e)) ^ "\n"
+    string_of_bind (Bind(t, n)) ^ " " ^ string_of_expr (Assign(n, e)) ^ "\n"
   | Block(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
@@ -140,8 +140,8 @@ and string_of_stmt stmt =
   | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
                       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
-  | For(e1, e2, e3, s) -> 
-    "roll (" ^ string_of_expr e1 ^ "; " ^ string_of_expr e2 ^ "; " ^ 
+  | For(s1, e2, e3, s) -> 
+    "roll (" ^ string_of_stmt s1 ^ "; " ^ string_of_expr e2 ^ "; " ^ 
     string_of_expr e3 ^ ") " ^ string_of_stmt s
   | Continue -> "continue;"
   | Break -> "break;"

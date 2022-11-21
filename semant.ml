@@ -127,8 +127,9 @@ let check (program : stmt list) =
       SIf(check_bool_expr e globalvars localvars, check_stmt st1 globalvars localvars rettyp, check_stmt st2 globalvars localvars rettyp)
     | While(e, st) ->
       SWhile(check_bool_expr e globalvars localvars, check_stmt st globalvars localvars rettyp)
-    | For(e1, e2, e3, st) ->
-      SFor(check_expr e1 globalvars localvars, check_expr e2 globalvars localvars, check_expr e3 globalvars localvars, check_stmt st globalvars localvars rettyp)
+    | For(s1, e2, e3, st) ->
+      let ss = check_stmt s1 globalvars localvars Void in
+      SFor(ss, check_expr e2 globalvars localvars, check_expr e3 globalvars localvars, check_stmt st globalvars localvars rettyp)
     | Continue -> SContinue
     | Break -> SBreak
     | Func(b, bl, s) as f -> check_func f globalvars localvars
