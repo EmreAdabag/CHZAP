@@ -20,7 +20,8 @@ function(void) -> int func_decl;
 int main() {
     int a;
     a = 2;
-
+    function (int) -> int add1 = function(int x) -> int { return x + 1; };
+    int b = add1(a);
     sum_thing(a, 3, function(float x, float y) -> float { return x + y; });
 }
 
