@@ -82,7 +82,7 @@ and string_of_sstmt = function
                        string_of_sstmt s1 ^ "else\n" ^ string_of_sstmt s2
   | SWhile(e, s) -> "while (" ^ string_of_sexpr e ^ ") " ^ string_of_sstmt s
   | SFor(s1, e2, e3, s) -> 
-    "for (" ^ string_of_sstmt s1 ^ "; " ^ string_of_sexpr e2 ^ "; " ^ 
+    "roll (" ^ string_of_sstmt s1 ^ "; " ^ string_of_sexpr e2 ^ "; " ^ 
     string_of_sexpr e3 ^ ") " ^ string_of_sstmt s
   | SContinue -> "continue;\n"
   | SBreak -> "break;\n"

@@ -1,31 +1,18 @@
-### Build the MicroC compiler
-
+## Make the parser and scanner
+To make both the parser and the semantic checker run
 ```
-ocamlbuild -pkgs llvm microc.native
+make all
 ```
-
-### Run the MicroC compiler and generate llvm code
+To only compile the parser run
 ```
-./microc.native -l example.mc > example.out
+make test_parser.native
 ```
-
-### Run the llvm code
+To only compile the semantic checker run
 ```
-lli example.out
+make test_semantic.native
 ```
-
-### Compiler files
--  `ast.ml`: abstract syntax tree (AST) definition
--  `scanner.mll`: scanner
--  `microcparse.mly`: parser
--  `sast.ml`: definition of the semantically-checked AST
--  `semant.ml`: semantic checking
--  `irgen.ml`: LLVM IR code generator
-
-### Other files
-
-- `test1.ml`: the file to test the scanner and parser
-- `test2.ml`: the file to test the semantic checker
-- `microc.ml`: top-level file to test and run microc compiler
-- `example.mc`: a sample microc source code
-- `example.out`: a sample compiled code of example.mc
+## Test cases
+```
+bash run_tests.sh
+```
+The output of each individual test would be under the `log` directory. The cumulative output would be in the file `log/all.log`
