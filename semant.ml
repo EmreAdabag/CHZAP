@@ -16,47 +16,8 @@ let check (program : stmt list) =
   let (globals : tbl_typ) = Hashtbl.create 1000 in
   let (locals : tbl_typ) = Hashtbl.create 1000 in
 
-  (* Verify a list of bindings has no duplicate names *)
-  (* let check_binds (kind : string) (binds : bind list) : ()=
-    let rec dups = function
-      | [] -> ()
-      |	(Bind(_, n1) :: Bind(_, n2) :: _) when n1 = n2 ->
-        raise (Failure ("duplicate " ^ kind ^ " " ^ n1))
-      | _ :: t -> dups t
-    in 
-    let comp_f b1 b2 = match (b1, b2) with 
-      | ((Bind(_, n1)), (Bind(_, n2))) -> compare n1 n2
-    in
-    dups (List.sort comp_f binds)
-  in *)
-
   (* Collect function declarations for built-in functions: no bodies *)
   Hashtbl.add globals "print" (Ftyp(Int, [Int]));
-
-  (* Add function name to symbol table *)
-  (* let add_func fd = 
-    let built_in_err = "function " ^ fd.fname ^ " may not be defined"
-    and dup_err = "duplicate function " ^ fd.fname
-    and make_err er = raise (Failure er)
-    and n = fd.fname (* Name of the function *)
-    in match fd with (* No duplicate functions or redefinitions of built-ins *)
-      _ when Hashtbl.mem built_in_decls n -> make_err built_in_err
-    | _ when Hashtbl.mem function_decls n -> make_err dup_err
-    | _ ->  Hashtbl.add function_decls n fd; true 
-  in *)
-  (* let add_func func =
-    let Func(Bind(_, name), _, _) = func in
-    let built_in_err = "function " ^ name ^ " may not be defined"
-    and dup_err = "duplicate function " ^ name
-    and make_err er = raise (Failure er)
-    and n = name (* Name of the function *) in 
-    match func with (* No duplicate functions or redefinitions of built-ins *)
-      | _ when Hashtbl.mem built_in_decls n -> make_err built_in_err
-      | _ when Hashtbl.mem function_decls n -> make_err dup_err
-      | Func(b, bl, s) ->  Hashtbl.add function_decls n (Func(b, bl, s)); true 
-  in *)
-
-  (* Collect all function names into one symbol table *)
 
   (* Return a variable from an input hash table *)
   let type_of_identifier (s : string) (globalvars : tbl_typ) (localvars : tbl_typ) : typ = 
@@ -71,13 +32,6 @@ let check (program : stmt list) =
     | [] -> []
     | Bind(x, _) :: t -> x :: types_of_binds t
   in
-
-  (* Return a function from our symbol table *)
-  (* let find_func s =
-    if Hashtbl.mem function_decls s then Hashtbl.find function_decls s
-    else try Hashtbl.find built_in_decls s
-    with Not_found -> raise (Failure ("unrecognized function " ^ s))
-  in *)
 
   (* Raise an exception if the given rvalue type cannot be assigned to
   the given lvalue type *)
@@ -228,11 +182,6 @@ let check (program : stmt list) =
       else
       (Int, SSubscription(a, (Int, e'))) (* TODO... I think this is done? *)
     | Afunc(rt, bl, s) as f -> check_afunc f globalvars localvars
-      (* let f = Func(Bind(rt, "anon"), bl, s) in
-      let sf = check_func f globalvars localvars in
-      match sf with
-      | SFunc(_, _, sbody) -> (Ftyp(rt, types_of_binds bl), SAfunc(rt, bl, sbody))
-      | _ -> raise (Failure ("error parsing anonymous function")) *)
 
   and check_bool_expr e globalvars localvars =
     let (t, e') = check_expr e globalvars localvars in
@@ -276,8 +225,6 @@ let check (program : stmt list) =
     | _ -> raise (Failure ("error parsing anonymous function"))
 
   and check_func_decl (formals : bind list) (body : stmt) (rt : typ) (globalvars : tbl_typ) (localvars : tbl_typ) : sstmt = 
-    (* Make sure no formals are void or duplicates *)
-    (* let _ = check_binds "formals" formals in *)
     (* create a new "global" scope with variables outside of current scope *)
     let globals = Hashtbl.copy globalvars in
     let add_fn k v = Hashtbl.add globals k v in
