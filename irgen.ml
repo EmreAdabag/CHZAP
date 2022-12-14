@@ -84,10 +84,10 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | SCharLit(c)         -> L.const_int char_t (Char.code c)
     | SFloatLit(f)        -> L.const_float f64_t f
     | SArrayLit(l)        -> raise (Failure ("Arr not implemented"))
-    | SId(s) -> 
-      let var = addr_of_identifier s globalvars localvars in
+    | SId(s)       -> L.build_load (addr_of_identifier s globalvars localvars) s builder
+      (* let var = addr_of_identifier s globalvars localvars in
       ignore(print_endline (L.string_of_llvalue var));
-      (try L.build_load var s builder with e -> ignore(print_endline (L.string_of_llvalue var)); var)
+      (try L.build_load var s builder with e -> ignore(print_endline (L.string_of_llvalue var)); var) *)
     | SBinop(e1, op, e2) ->
       let e1' = build_expr globalvars localvars builder e1
       and e2' = build_expr globalvars localvars builder e2 in
@@ -129,7 +129,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
       let result = f ^ "_result" in
       L.build_call the_function (Array.of_list llargs) result builder
     | SNoexpr -> L.const_int void_t 0
-    | SAfunc(rt, bl, s) -> 
+    | SAfunc(rt, bl, s) ->
       (* define the function, give it a default name *)
       let fname = "_anonymou" in
       let the_function = L.define_function fname (ftype_of_binds (Bind(rt, fname)) bl) the_module in
@@ -212,8 +212,8 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | SContinue -> raise (Failure ("CodegenError: Continue has not been implemented for codegen"))
     | SBreak -> raise (Failure ("CodegenError: Break has not been implemented for codegen"))
     | SReturn e -> ignore(L.build_ret (build_expr globalvars localvars builder e) builder); builder
-    | SFunc(b, bl, s) -> 
-      (* define the function *)
+    | SFunc(b, bl, s) ->
+       (* define the function *)
       let A.Bind(rt, fname) = b in
       let the_function = L.define_function fname (ftype_of_binds b bl) the_module in
       (* store the function in global symbol table *)
