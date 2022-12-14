@@ -1,0 +1,16 @@
+int b = 2;
+int a = 1;
+while (b < 10) {
+  b = b + 1;
+  if (b > 8) {
+    print(b);
+    } else {
+        print(a);
+    }
+}
+
+bool t = false;
+
+if (!t) {
+    print(666);
+}
