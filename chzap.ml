@@ -4,6 +4,8 @@
   3. generate LLVM IR,
   4. dump the module *)
 
+module L = Llvm
+
 type action = Ast | Sast | LLVM_IR
 
 let () =
@@ -27,4 +29,4 @@ let () =
     match !action with
     | Ast     -> ()
     | Sast    -> print_string (Sast.string_of_sprogram sast)
-    | LLVM_IR -> print_string (Llvm.string_of_llmodule (Irgen.translate sast))
+    | LLVM_IR -> ignore(L.dump_module (Irgen.translate sast))

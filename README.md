@@ -17,6 +17,16 @@ bash run_tests.sh
 ```
 The output of each individual test would be under the `log` directory. The cumulative output would be in the file `log/all.log`
 
+## IRGen
+Compile: 
+```
+ocamlbuild -pkgs llvm chzap.native
+```
+Run: 
+```
+./chzap.native [-a|-s|-l] [file.chzap]
+```
+
 # Features we implemented
 1. strong static type
 2. static scoping
