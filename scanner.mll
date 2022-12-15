@@ -28,7 +28,6 @@ whitespace { token lexbuf }
 | '+' { PLUS }
 | '-' { MINUS }
 | '*' { TIMES }
-| "**" { EXP }
 | '/' { DIVIDE }
 | '%' { MOD }
 | '=' { ASSIGN }

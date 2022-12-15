@@ -96,11 +96,10 @@ let translate (program : sstmt list) : Llvm.llmodule =
           A.Add     -> L.build_add
         | A.Sub     -> L.build_sub
         | A.Mul     -> L.build_mul
-        | A.Exp     -> L.build_mul (*TODO: fix*)
         | A.Div     -> L.build_sdiv
         | A.Mod     -> L.build_srem
-        | A.BWAnd   -> L.build_and (*TODO: fix*)
-        | A.BWOr    -> L.build_or (*TODO: fix*)
+        | A.BWAnd   -> L.build_and 
+        | A.BWOr    -> L.build_or 
         | A.And     -> L.build_and
         | A.Or      -> L.build_or
         | A.Eq      -> L.build_icmp L.Icmp.Eq
@@ -115,11 +114,10 @@ let translate (program : sstmt list) : Llvm.llmodule =
           A.Add     -> L.build_fadd
         | A.Sub     -> L.build_fsub
         | A.Mul     -> L.build_fmul
-        | A.Exp     -> L.build_fmul (*TODO: fix*)
         | A.Div     -> L.build_fdiv
         | A.Mod     -> L.build_frem
-        | A.BWAnd   -> L.build_and (*TODO: fix*)
-        | A.BWOr    -> L.build_or (*TODO: fix*)
+        | A.BWAnd   -> L.build_and 
+        | A.BWOr    -> L.build_or 
         | A.And     -> L.build_and
         | A.Or      -> L.build_or
         | A.Eq      -> L.build_fcmp L.Fcmp.Oeq
