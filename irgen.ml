@@ -161,11 +161,13 @@ let translate (program : sstmt list) : Llvm.llmodule =
       let _ = Hashtbl.iter (fun k v -> Hashtbl.add globals k v) localvars in
       (* create a "local" scope with all formals *)
       let locals : tbl_typ = Hashtbl.create 1000 in
-      let create_var (A.Bind(t, n) : A.bind) = 
+      let create_var (A.Bind(t, n) : A.bind) p = 
         let local = L.build_alloca (ltype_of_typ t) n fbuilder in
+        let _ = L.build_store p local fbuilder in
+        
         Hashtbl.add locals n local
       in
-      let _ = List.map create_var bl in
+      let _ = List.map2 create_var bl (Array.to_list (L.params the_function)) in
       (* build stmt *)
       let rbuilder = build_stmt globals locals fbuilder s in
       (* add return if not: void *)
