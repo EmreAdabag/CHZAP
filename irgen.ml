@@ -91,23 +91,43 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | SBinop(e1, op, e2) ->
       let e1' = build_expr globalvars localvars builder e1
       and e2' = build_expr globalvars localvars builder e2 in
-      (match op with
-        A.Add     -> L.build_add
-      | A.Sub     -> L.build_sub
-      | A.Mul     -> L.build_mul
-      | A.Exp     -> L.build_mul (*TODO: fix*)
-      | A.Div     -> L.build_sdiv (*TODO: type*)
-      | A.Mod     -> L.build_srem
-      | A.BWAnd   -> L.build_and (*TODO: fix*)
-      | A.BWOr    -> L.build_or (*TODO: fix*)
-      | A.And     -> L.build_and
-      | A.Or      -> L.build_or
-      | A.Eq      -> L.build_icmp L.Icmp.Eq
-      | A.Neq     -> L.build_icmp L.Icmp.Ne
-      | A.Less    -> L.build_icmp L.Icmp.Slt
-      | A.Leq     -> L.build_icmp L.Icmp.Sle
-      | A.Greater -> L.build_icmp L.Icmp.Sgt
-      | A.Geq     -> L.build_icmp L.Icmp.Sge
+      if (fst e1 = A.Int) || (fst e2 = A.Int) then
+        (match op with
+          A.Add     -> L.build_add
+        | A.Sub     -> L.build_sub
+        | A.Mul     -> L.build_mul
+        | A.Exp     -> L.build_mul (*TODO: fix*)
+        | A.Div     -> L.build_sdiv
+        | A.Mod     -> L.build_srem
+        | A.BWAnd   -> L.build_and (*TODO: fix*)
+        | A.BWOr    -> L.build_or (*TODO: fix*)
+        | A.And     -> L.build_and
+        | A.Or      -> L.build_or
+        | A.Eq      -> L.build_icmp L.Icmp.Eq
+        | A.Neq     -> L.build_icmp L.Icmp.Ne
+        | A.Less    -> L.build_icmp L.Icmp.Slt
+        | A.Leq     -> L.build_icmp L.Icmp.Sle
+        | A.Greater -> L.build_icmp L.Icmp.Sgt
+        | A.Geq     -> L.build_icmp L.Icmp.Sge
+        ) e1' e2' "tmp" builder
+      else 
+          (match op with
+          A.Add     -> L.build_fadd
+        | A.Sub     -> L.build_fsub
+        | A.Mul     -> L.build_fmul
+        | A.Exp     -> L.build_fmul (*TODO: fix*)
+        | A.Div     -> L.build_fdiv
+        | A.Mod     -> L.build_frem
+        | A.BWAnd   -> L.build_and (*TODO: fix*)
+        | A.BWOr    -> L.build_or (*TODO: fix*)
+        | A.And     -> L.build_and
+        | A.Or      -> L.build_or
+        | A.Eq      -> L.build_fcmp L.Fcmp.Oeq
+        | A.Neq     -> L.build_fcmp L.Fcmp.One
+        | A.Less    -> L.build_fcmp L.Fcmp.Olt
+        | A.Leq     -> L.build_fcmp L.Fcmp.Ole
+        | A.Greater -> L.build_fcmp L.Fcmp.Ogt
+        | A.Geq     -> L.build_fcmp L.Fcmp.Oge
       ) e1' e2' "tmp" builder
     | SUnop(op, e) -> 
       let e' = build_expr globalvars localvars builder e in
