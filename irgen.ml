@@ -246,8 +246,15 @@ let translate (program : sstmt list) : Llvm.llmodule =
       (* create a "local" scope with all formals *)
       let locals : tbl_typ = Hashtbl.create 1000 in
       let create_var (A.Bind(t, n) : A.bind) = 
-        let local = L.build_alloca (ltype_of_typ t) n fbuilder in
-        Hashtbl.add locals n local
+        (match t with
+        | Ftyp(t, tl) ->
+          (* get the function *)
+          let ft = L.function_type (ltype_of_typ t) (Array.of_list (List.map ltype_of_typ tl)) in
+          let local_func = L.declare_function n ft the_module in
+          Hashtbl.add locals n local_func
+        | _ ->
+          let local = L.build_alloca (ltype_of_typ t) n fbuilder in
+          Hashtbl.add locals n local)
       in
       let _ = List.map create_var bl in
       (* build stmt *)
