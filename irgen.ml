@@ -49,7 +49,9 @@ let translate (program : sstmt list) : Llvm.llmodule =
     (* type checks are the job of semantics *)
     | A.Const(t) -> ltype_of_typ t
     | A.Arr(_) -> raise (Failure ("Arr not implemented"))
-    | A.Ftyp(t, tl) -> L.function_type (ltype_of_typ t) (Array.of_list (List.map ltype_of_typ tl))
+    | A.Ftyp(t, tl) -> 
+      let ft = L.function_type (ltype_of_typ t) (Array.of_list (List.map ltype_of_typ tl)) in
+      L.pointer_type ft
     | A.Dyn -> raise (Failure ("Dyn not implemented"))
   in
 
@@ -144,14 +146,22 @@ let translate (program : sstmt list) : Llvm.llmodule =
       L.build_call printf_func [| int_format_str ; (build_expr globalvars localvars builder e) |]
         "printf" builder
     | SCall(f, args) -> 
+      (* ignore(print_endline f); *)
       let the_function = addr_of_identifier f globalvars localvars in
-      let llargs = List.rev (List.map (build_expr globalvars localvars builder) (List.rev args)) in
+      (* ignore(print_endline (L.string_of_llvalue the_function)); *)
+      (* let llargs = List.rev (List.map (build_expr globalvars localvars builder) (List.rev args)) in *)
+      (* ignore(List.map (fun x -> print_endline (L.string_of_llvalue x)) llargs); *)
+      let build_arg = function
+        | A.Ftyp(_, _), SId(fname) -> addr_of_identifier fname globalvars localvars
+        | sx -> build_expr globalvars localvars builder sx
+      in
+      let llargs = List.rev (List.map build_arg (List.rev args)) in
       let result = f ^ "_result" in
       L.build_call the_function (Array.of_list llargs) result builder
     | SNoexpr -> L.const_int void_t 0
     | SAfunc(rt, bl, s) ->
       (* define the function, give it a default name *)
-      let fname = "_anonymou" in
+      let fname = "_anonymous" in
       let the_function = L.define_function fname (ftype_of_binds (Bind(rt, fname)) bl) the_module in
       (* we don't store anonymous functions to symbol tables upon definition *)
       (* get the builder *)
@@ -245,18 +255,27 @@ let translate (program : sstmt list) : Llvm.llmodule =
       let _ = Hashtbl.iter (fun k v -> Hashtbl.add globals k v) localvars in
       (* create a "local" scope with all formals *)
       let locals : tbl_typ = Hashtbl.create 1000 in
-      let create_var (A.Bind(t, n) : A.bind) = 
-        (match t with
-        | Ftyp(t, tl) ->
-          (* get the function *)
-          let ft = L.function_type (ltype_of_typ t) (Array.of_list (List.map ltype_of_typ tl)) in
-          let local_func = L.declare_function n ft the_module in
-          Hashtbl.add locals n local_func
-        | _ ->
-          let local = L.build_alloca (ltype_of_typ t) n fbuilder in
-          Hashtbl.add locals n local)
+      (* build function formals *)
+      let create_var (A.Bind(t, n) : A.bind) p = 
+        L.set_value_name n p;
+        let ty = 
+          (match t with
+          (* if the formal is a function, return its ptr type *)
+          | Ftyp(t, tl) ->
+            (* get the function *)
+            let ft = L.function_type (ltype_of_typ t) (Array.of_list (List.map ltype_of_typ tl)) in
+            (* L.declare_function n ft the_module *)
+            L.pointer_type ft
+          (* else return the varaible type *)
+          | _ -> ltype_of_typ t)
+        in
+        (* allocate a space for the formal *)
+        let local = L.build_alloca ty n fbuilder in
+        (* store (initialize) the formal *)
+        ignore(L.build_store p local fbuilder);
+        Hashtbl.add locals n local
       in
-      let _ = List.map create_var bl in
+      let _ = List.map2 create_var bl (Array.to_list (L.params the_function)) in
       (* build stmt *)
       let rbuilder = build_stmt globals locals fbuilder s in
       (* add return if not: void *)
