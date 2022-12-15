@@ -1,11 +1,14 @@
 .PHONY : all
-all : test_parser.native test_semantic.native
+all : test_parser.native test_semantic.native test_irgen.native
 
-test_parser.native :
+test_parser :
 	ocamlbuild test_parser.native
 
-test_semantic.native :
+test_semantic :
 	ocamlbuild test_semantic.native
+
+irgen:
+	ocamlbuild -pkgs llvm chzap.native
 
 # "make clean" removes all generated files
 

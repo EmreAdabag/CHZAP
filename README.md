@@ -26,7 +26,10 @@ Run:
 ```
 ./chzap.native [-a|-s|-l] [file.chzap]
 ```
-
+Each flag represent a different phase of the compiler.
+`-a` produces the abstract syntax tree, which represent Syntax Analysis
+`-s` Is Semantic Analysis
+`-i` is the Intermediate Code Generation
 # Features we implemented
 1. strong static type
 2. static scoping
