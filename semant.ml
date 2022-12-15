@@ -95,7 +95,6 @@ let check (program : stmt list) =
       if t = rettyp then SReturn (t, e')
       else raise (Failure ("return gives " ^ string_of_typ t ^ " expected " ^
                   string_of_typ rettyp ^ " in " ^ string_of_expr e))
-      (* TODO: need to check that return val matches declared return val ? maybe done*)
 
   (* Return a semantically-checked expression, i.e., with a type *)
   and check_expr (ex : expr) (globalvars : tbl_typ) (localvars : tbl_typ) =

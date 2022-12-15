@@ -118,7 +118,6 @@ let rec string_of_expr = function
   | Noexpr -> ""
   | Afunc(t, bl, s) -> "lambda: " ^ string_of_typ t ^ " (" ^ String.concat ", " 
     (List.map string_of_bind bl) ^ ") {\n" ^ string_of_stmt s ^ "}"
-  (* TODO: printing of stmt in lambdas is not implemented *)
 
 and string_of_stmt stmt = 
 
