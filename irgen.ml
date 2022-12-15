@@ -33,8 +33,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
   and void_t     = L.void_type   context
   and char_t     = L.i8_type     context
   and i1_t       = L.i1_type     context
-  in
-
+in
   (* TODO: add more types *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
@@ -48,7 +47,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | A.Char -> char_t
     (* type checks are the job of semantics *)
     | A.Const(t) -> ltype_of_typ t
-    | A.Arr(_) -> raise (Failure ("Arr not implemented"))
+    | A.Arr(t) -> L.array_type (ltype_of_typ t) 10
     | A.Ftyp(t, tl) -> L.function_type (ltype_of_typ t) (Array.of_list (List.map ltype_of_typ tl))
     | A.Dyn -> raise (Failure ("Dyn not implemented"))
   in
@@ -83,7 +82,18 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | SBoolLit(b)         -> L.const_int i1_t (if b then 1 else 0)
     | SCharLit(c)         -> L.const_int char_t (Char.code c)
     | SFloatLit(f)        -> L.const_float f64_t f
-    | SArrayLit(l)        -> raise (Failure ("Arr not implemented"))
+    | SArrayLit (sexprs) -> let ltype_of_arr = ltype_of_typ (fst(List.hd sexprs)) in
+                            let all_emements = List.map (fun x -> build_expr globalvars localvars builder  x) sexprs in
+                            let this_array = L.build_alloca (L.array_type ltype_of_arr 10) "tmp" builder in
+                            let rec range i j = if i >= j then [] else i :: (range (i+1) j) in
+                            let index_list = range 0 10 in
+                            List.iter (fun x ->
+                              let where = L.build_in_bounds_gep this_array [| L.const_int i32_t 0; L.const_int i32_t x |] "tmp" builder in
+                              let what = List.nth all_emements x in
+                              ignore (L.build_store what where builder)
+                            ) index_list; L.build_load this_array "tmp" builder
+
+
     | SId(s)       -> L.build_load (addr_of_identifier s globalvars localvars) s builder
       (* let var = addr_of_identifier s globalvars localvars in
       ignore(print_endline (L.string_of_llvalue var));
