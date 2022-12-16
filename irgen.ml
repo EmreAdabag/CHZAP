@@ -52,6 +52,11 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | A.Dyn -> raise (Failure ("Dyn not implemented"))
   in
 
+  let remove_const (t : A.typ) : A.typ = match t with
+    | A.Const(t') -> t'
+    | _ -> t
+  in  
+
   (* Return the address of a variable from symbol table *)
   let addr_of_identifier (s : string) globalvars localvars : L.llvalue = 
     if Hashtbl.mem localvars s then Hashtbl.find localvars s 
@@ -203,6 +208,18 @@ let translate (program : sstmt list) : Llvm.llmodule =
           | _ -> raise (Failure ("Print type " ^ Ast.string_of_typ typ ^ "not suppoted")));
         ignore(build_print "%c" (String, SCharLit(' ')) globalvars localvars builder);
         build_expr globalvars localvars builder (A.Void, SCall("print", el)))
+
+    (* | SCall ("print", [(typ, _) as e]) ->
+      let t = remove_const typ in
+      ( match t with
+      | Int -> L.build_call print_i_func [| build_expr globalvars localvars builder e |]
+        "print_i" builder
+      | Float -> L.build_call print_f_func [| build_expr globalvars localvars builder e |]
+        "print_f" builder
+      | Bool -> L.build_call print_b_func [| build_expr globalvars localvars builder e |]
+        "print_b" builder
+      | _ -> raise (Failure ("Print type " ^ Ast.string_of_typ typ ^ " not suppoted"))
+      ) *)
 
     | SCall(f, args) -> 
       (* ignore(print_endline f); *)
