@@ -28,7 +28,6 @@ let translate (program : sstmt list) : Llvm.llmodule =
 
   (* llvm types *)
   let i32_t      = L.i32_type    context
-  and i8_t       = L.i8_type     context
   and f64_t      = L.double_type context (* prob with floats *)
   and void_t     = L.void_type   context
   and char_t     = L.i8_type     context
@@ -36,9 +35,20 @@ let translate (program : sstmt list) : Llvm.llmodule =
   and i1_t       = L.i1_type     context
   in
 
-  (* TODO: add more types *)
-  let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
-  let printf_func = L.declare_function "printf" printf_t the_module in
+  let print_i_t = L.var_arg_function_type i32_t [| i32_t |] in
+  let print_i_func = L.declare_function "print_i" print_i_t the_module in
+
+  let print_f_t = L.var_arg_function_type i32_t [| f64_t |] in
+  let print_f_func = L.declare_function "print_f" print_f_t the_module in
+
+  let print_b_t = L.var_arg_function_type i32_t [| char_t |] in
+  let print_b_func = L.declare_function "print_b" print_b_t the_module in
+
+  let bwAnd_t = L.function_type i32_t [| i32_t ; i32_t |] in
+  let bwAnd_func = L.declare_function "bitwiseAnd" bwAnd_t the_module in
+
+  let bwOr_t = L.function_type i32_t [| i32_t ; i32_t |] in
+  let bwOr_func = L.declare_function "bitwiseOr" bwOr_t the_module in
 
   (* return llvm type for sast type *)
   let rec ltype_of_typ = function
@@ -108,42 +118,48 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | SBinop(e1, op, e2) ->
       let e1' = build_expr globalvars localvars builder e1
       and e2' = build_expr globalvars localvars builder e2 in
-      if (fst e1 = A.Int) || (fst e2 = A.Int) then
-        (match op with
-          A.Add     -> L.build_add
-        | A.Sub     -> L.build_sub
-        | A.Mul     -> L.build_mul
-        | A.Div     -> L.build_sdiv
-        | A.Mod     -> L.build_srem
-        | A.BWAnd   -> L.build_and 
-        | A.BWOr    -> L.build_or 
-        | A.And     -> L.build_and
-        | A.Or      -> L.build_or
-        | A.Eq      -> L.build_icmp L.Icmp.Eq
-        | A.Neq     -> L.build_icmp L.Icmp.Ne
-        | A.Less    -> L.build_icmp L.Icmp.Slt
-        | A.Leq     -> L.build_icmp L.Icmp.Sle
-        | A.Greater -> L.build_icmp L.Icmp.Sgt
-        | A.Geq     -> L.build_icmp L.Icmp.Sge
-        ) e1' e2' "tmp" builder
-      else 
+      (match op with
+        A.BWAnd -> 
+          L.build_call bwAnd_func [|e1' ; e2'|] "bitwiseAnd" builder
+        | A.BWOr    -> 
+          L.build_call bwOr_func [|e1' ; e2'|] "bitwiseOr" builder
+        | _ -> (
+        if (fst e1 = A.Int) && (fst e2 = A.Int) then
           (match op with
-          A.Add     -> L.build_fadd
-        | A.Sub     -> L.build_fsub
-        | A.Mul     -> L.build_fmul
-        | A.Div     -> L.build_fdiv
-        | A.Mod     -> L.build_frem
-        | A.BWAnd   -> L.build_and 
-        | A.BWOr    -> L.build_or 
-        | A.And     -> L.build_and
-        | A.Or      -> L.build_or
-        | A.Eq      -> L.build_fcmp L.Fcmp.Oeq
-        | A.Neq     -> L.build_fcmp L.Fcmp.One
-        | A.Less    -> L.build_fcmp L.Fcmp.Olt
-        | A.Leq     -> L.build_fcmp L.Fcmp.Ole
-        | A.Greater -> L.build_fcmp L.Fcmp.Ogt
-        | A.Geq     -> L.build_fcmp L.Fcmp.Oge
-      ) e1' e2' "tmp" builder
+            A.Add     -> L.build_add
+          | A.Sub     -> L.build_sub
+          | A.Mul     -> L.build_mul
+          | A.Div     -> L.build_sdiv
+          | A.Mod     -> L.build_srem
+          | A.And     -> L.build_and
+          | A.Or      -> L.build_or
+          | A.Eq      -> L.build_icmp L.Icmp.Eq
+          | A.Neq     -> L.build_icmp L.Icmp.Ne
+          | A.Less    -> L.build_icmp L.Icmp.Slt
+          | A.Leq     -> L.build_icmp L.Icmp.Sle
+          | A.Greater -> L.build_icmp L.Icmp.Sgt
+          | A.Geq     -> L.build_icmp L.Icmp.Sge
+          | _ -> raise (Failure("impossible"))
+          ) e1' e2' "tmp" builder
+        else 
+            (match op with
+            A.Add     -> L.build_fadd
+          | A.Sub     -> L.build_fsub
+          | A.Mul     -> L.build_fmul
+          | A.Div     -> L.build_fdiv
+          | A.Mod     -> L.build_frem
+          | A.And     -> L.build_and
+          | A.Or      -> L.build_or
+          | A.Eq      -> L.build_fcmp L.Fcmp.Oeq
+          | A.Neq     -> L.build_fcmp L.Fcmp.One
+          | A.Less    -> L.build_fcmp L.Fcmp.Olt
+          | A.Leq     -> L.build_fcmp L.Fcmp.Ole
+          | A.Greater -> L.build_fcmp L.Fcmp.Ogt
+          | A.Geq     -> L.build_fcmp L.Fcmp.Oge
+          | _ -> raise (Failure("impossible"))
+        ) e1' e2' "tmp" builder
+        ))
+      
     | SUnop(op, e) -> 
       let e' = build_expr globalvars localvars builder e in
       (match op with
@@ -154,18 +170,18 @@ let translate (program : sstmt list) : Llvm.llmodule =
       let v = addr_of_identifier var globalvars localvars in
       ignore(L.build_store e' v builder); e'
     | SSubscription(_, _) -> raise (Failure ("TODO"))
-    | SCall ("print", fmt :: args) ->
-      let fmts = 
-        (match fmt with
-        | String, SStringLit(s) -> s
-        | t, sx -> 
-          let err = "illegal argument (" ^ (string_of_sexpr (t, sx)) ^ "): no know conversion from " ^ 
-          (A.string_of_typ t) ^ "to string" in
-          raise (Failure err))
-      in
-      let (format_str : L.llvalue) = L.build_global_stringptr fmts "fmt" builder in
-      let (print_args : L.llvalue list) = List.rev (List.map (build_arg globalvars localvars builder) (List.rev args)) in
-      L.build_call printf_func (Array.of_list (format_str :: print_args)) "printf" builder
+
+    | SCall ("print", [(typ, _) as e]) ->
+      ( match typ with
+      | Int -> L.build_call print_i_func [| build_expr globalvars localvars builder e |]
+        "print_i" builder
+      | Float -> L.build_call print_f_func [| build_expr globalvars localvars builder e |]
+        "print_f" builder
+      | Bool -> L.build_call print_b_func [| build_expr globalvars localvars builder e |]
+        "print_b" builder
+      | _ -> raise (Failure ("Print type " ^ Ast.string_of_typ typ ^ "not suppoted"))
+      )
+
     | SCall(f, args) -> 
       (* ignore(print_endline f); *)
       let addr = (addr_of_identifier f globalvars localvars) in

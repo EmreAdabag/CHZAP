@@ -1,14 +1,10 @@
 .PHONY : all
-all : test_parser.native test_semantic.native test_irgen.native
+all : chzap.native lib.o
 
-test_parser :
-	ocamlbuild test_parser.native
-
-test_semantic :
-	ocamlbuild test_semantic.native
-
-irgen:
-	ocamlbuild -pkgs llvm chzap.native
+chzap.native:
+	opam exec -- \
+	ocamlbuild -use-ocamlfind -pkgs llvm,llvm.analysis chzap.native
+	gcc -c lib.c
 
 # "make clean" removes all generated files
 
