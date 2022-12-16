@@ -88,6 +88,7 @@ let check (program : stmt list) =
       SFor(ss, check_expr e2 globalvars localvars, check_expr e3 globalvars localvars, check_stmt st globalvars localvars rettyp)
     | Continue -> SContinue
     | Break -> SBreak
+    | Assert(e) -> SAssert(check_bool_expr e globalvars localvars)
     | Func(b, bl, s) as f -> check_func f globalvars localvars
     | Return e -> 
       let (t, e') = check_expr e globalvars localvars in
@@ -190,10 +191,9 @@ let check (program : stmt list) =
 
   and check_call fname args call globalvars localvars = 
       match fname with
-        "print" -> 
-          let arg = if List.length args = 1 then check_expr (List.hd args) globalvars localvars
-            else raise (Failure ("expected one argument for " ^ fname)) in
-          (Int, SCall("print", [ arg ]))
+      | "print" -> 
+          let sargs = List.map (fun e -> check_expr e globalvars localvars) args in
+          (Int, SCall("print", sargs))
       | _ ->
         let ty = 
           if Hashtbl.mem localvars fname then Hashtbl.find localvars fname

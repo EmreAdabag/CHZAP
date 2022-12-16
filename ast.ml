@@ -6,7 +6,7 @@ type uop = Not
 
 (* type ftyp = typ * typ list *)
 type typ = 
-  | Int | Bool | Float | Char | Void 
+  | Int | Bool | Float | Char | String | Void 
   | Arr of typ 
   | Const of typ 
   | Ftyp of typ * typ list
@@ -19,6 +19,7 @@ type expr =
   | IntLit of int
   | BoolLit of bool
   | CharLit of char
+  | StringLit of string
   | FloatLit of float
   | ArrayLit of expr list
   | Id of string
@@ -44,6 +45,7 @@ and stmt =
   | While of expr * stmt
   | Continue
   | Break
+  | Assert of expr
   (* return *)
   | Return of expr
   (* func_def *)
@@ -88,6 +90,7 @@ let rec string_of_typ = function
   | Int -> "int"
   | Bool -> "bool"
   | Char -> "char"
+  | String -> "string"
   | Float -> "float"
   | Arr(t) -> string_of_typ t ^ "[]"
   | Const(t) ->"const " ^ string_of_typ t 
@@ -103,6 +106,7 @@ let rec string_of_expr = function
   | IntLit(l) -> string_of_int l
   | FloatLit(l) -> string_of_float l
   | CharLit(l) -> Char.escaped l
+  | StringLit(l) -> l
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
   | ArrayLit(el) -> "[" ^ String.concat "," (List.map string_of_expr el) ^ "]"
@@ -137,6 +141,7 @@ and string_of_stmt stmt =
     string_of_expr e3 ^ ") " ^ string_of_stmt s
   | Continue -> "continue;"
   | Break -> "break;"
+  | Assert(e) -> "assert " ^ (string_of_expr e) ^ ";\n"
   | Func(b, bl, s) -> "function " ^ string_of_bind b ^ " (" ^ String.concat ", " 
     (List.map string_of_bind bl) ^ ")\n" ^ string_of_stmt s ^ "\n"
 

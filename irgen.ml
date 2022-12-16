@@ -35,21 +35,6 @@ let translate (program : sstmt list) : Llvm.llmodule =
   and i1_t       = L.i1_type     context
   in
 
-  let print_i_t = L.var_arg_function_type i32_t [| i32_t |] in
-  let print_i_func = L.declare_function "print_i" print_i_t the_module in
-
-  let print_f_t = L.var_arg_function_type i32_t [| f64_t |] in
-  let print_f_func = L.declare_function "print_f" print_f_t the_module in
-
-  let print_b_t = L.var_arg_function_type i32_t [| char_t |] in
-  let print_b_func = L.declare_function "print_b" print_b_t the_module in
-
-  let bwAnd_t = L.function_type i32_t [| i32_t ; i32_t |] in
-  let bwAnd_func = L.declare_function "bitwiseAnd" bwAnd_t the_module in
-
-  let bwOr_t = L.function_type i32_t [| i32_t ; i32_t |] in
-  let bwOr_func = L.declare_function "bitwiseOr" bwOr_t the_module in
-
   (* return llvm type for sast type *)
   let rec ltype_of_typ = function
     | A.Int   -> i32_t
@@ -89,10 +74,39 @@ let translate (program : sstmt list) : Llvm.llmodule =
   let add_terminal builder instr =
     match L.block_terminator (L.insertion_block builder) with
     | Some _ -> ()
-    | None -> ignore (instr builder) in
+    | None -> ignore (instr builder) 
+  in
+
+  (* printf *)
+  let printf_t = L.var_arg_function_type i32_t [| char_pt |] in
+  let printf_func = L.declare_function "printf" printf_t the_module in
+
+  (* let print_i_t = L.var_arg_function_type i32_t [| i32_t |] in
+  let print_i_func = L.declare_function "print_i" print_i_t the_module in *)
+
+  (* let print_f_t = L.var_arg_function_type i32_t [| f64_t |] in
+  let print_f_func = L.declare_function "print_f" print_f_t the_module in
+
+  let print_b_t = L.var_arg_function_type i32_t [| char_t |] in
+  let print_b_func = L.declare_function "print_b" print_b_t the_module in *)
+
+  (* exit *)
+  let exit_t = L.function_type (i32_t) [| i32_t |] in
+  let exit_func = L.declare_function "exit" exit_t the_module in
+
+  let bwAnd_t = L.function_type i32_t [| i32_t ; i32_t |] in
+  let bwAnd_func = L.declare_function "bitwiseAnd" bwAnd_t the_module in
+
+  let bwOr_t = L.function_type i32_t [| i32_t ; i32_t |] in
+  let bwOr_func = L.declare_function "bitwiseOr" bwOr_t the_module in
+
+  (* build print *)
+  let rec build_print fmt sexpr globals locals builder = 
+    let fmtp = L.build_global_stringptr fmt "fmt" builder in
+    L.build_call printf_func [| fmtp ; build_expr globals locals builder sexpr |] "print" builder
 
   (* build function arguments *)
-  let rec build_arg globals locals builder = function
+  and build_arg globals locals builder = function
     | A.Ftyp(_, _), SId(fname) -> 
       let faddr = addr_of_identifier fname globals locals in
       L.build_load faddr (fname ^ "_ptr") builder
@@ -104,11 +118,12 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | SBoolLit(b)         -> L.const_int i1_t (if b then 1 else 0)
     | SCharLit(c)         -> L.const_int char_t (Char.code c)
     | SStringLit(s)       -> 
-      let clst = List.map (fun c -> L.const_int char_t (Char.code c)) (List.of_seq (String.to_seq s)) in
+      (* let clst = List.map (fun c -> L.const_int char_t (Char.code c)) (List.of_seq (String.to_seq s)) in
       let cstr = L.const_array char_t (Array.of_list clst) in
       let addr = L.build_alloca char_pt "_const_str" builder in
       ignore(L.build_store cstr addr builder);
-      addr
+      addr *)
+      L.build_global_stringptr s "_string" builder
     | SFloatLit(f)        -> L.const_float f64_t f
     | SArrayLit(l)        -> raise (Failure ("Arr not implemented"))
     | SId(s)       -> L.build_load (addr_of_identifier s globalvars localvars) s builder
@@ -171,16 +186,23 @@ let translate (program : sstmt list) : Llvm.llmodule =
       ignore(L.build_store e' v builder); e'
     | SSubscription(_, _) -> raise (Failure ("TODO"))
 
-    | SCall ("print", [(typ, _) as e]) ->
-      ( match typ with
-      | Int -> L.build_call print_i_func [| build_expr globalvars localvars builder e |]
-        "print_i" builder
-      | Float -> L.build_call print_f_func [| build_expr globalvars localvars builder e |]
-        "print_f" builder
-      | Bool -> L.build_call print_b_func [| build_expr globalvars localvars builder e |]
-        "print_b" builder
-      | _ -> raise (Failure ("Print type " ^ Ast.string_of_typ typ ^ "not suppoted"))
-      )
+    | SCall ("print", args) ->
+      (match args with
+      | [] -> build_print "%c" (String, SCharLit('\n')) globalvars localvars builder
+      | ((typ, _) as e) :: el -> 
+        ignore(match typ with
+          (* | Int -> L.build_call print_i_func [| build_expr globalvars localvars builder e |]
+            "print_i" builder *)
+          | Int -> build_print "%d" e globalvars localvars builder
+          (* | Float -> L.build_call print_f_func [| build_expr globalvars localvars builder e |]
+            "print_f" builder
+          | Bool -> L.build_call print_b_func [| build_expr globalvars localvars builder e |]
+            "print_b" builder *)
+          | Float -> build_print "%f" e globalvars localvars builder
+          | String -> build_print "%s" e globalvars localvars builder
+          | _ -> raise (Failure ("Print type " ^ Ast.string_of_typ typ ^ "not suppoted")));
+        ignore(build_print "%c" (String, SCharLit(' ')) globalvars localvars builder);
+        build_expr globalvars localvars builder (A.Void, SCall("print", el)))
 
     | SCall(f, args) -> 
       (* ignore(print_endline f); *)
@@ -297,6 +319,24 @@ let translate (program : sstmt list) : Llvm.llmodule =
         | Some(_, end_bb) -> ignore(L.build_br end_bb builder); builder
         | None -> builder
       ) 
+
+    | SAssert(e) -> 
+      (* evaluate the expr *)
+      let ret = build_expr globalvars localvars builder e in
+      (* build assert struct *)
+      let fail_bb = L.append_block context "assert_fail" the_function in
+      let end_bb = L.append_block context "end_assert" the_function in
+      let build_br_end = L.build_br end_bb in (* partial *)
+      (* cond jmp *)
+      ignore(L.build_cond_br ret end_bb fail_bb builder);
+      (* if fail: exit with code 1 *)
+      let fail_builder = L.builder_at_end context fail_bb in
+      ignore(build_print "assertion failed: %d" e localvars globalvars fail_builder);
+      ignore(L.build_call exit_func [| (L.const_int i32_t 1) |] "exit" fail_builder);
+      ignore(add_terminal fail_builder build_br_end);
+      (* if success *)
+      L.builder_at_end context end_bb
+
     | SReturn e -> ignore(L.build_ret (build_expr globalvars localvars builder e) builder); builder
     | SFunc(b, bl, s) ->
        (* define the function *)
@@ -357,10 +397,10 @@ let translate (program : sstmt list) : Llvm.llmodule =
   let (locals : tbl_typ) = Hashtbl.create 1000 in
 
   (* main block *)
-  let main = L.define_function "main" (L.function_type i32_t (Array.of_list [])) the_module in
+  let main = L.define_function "main" (L.function_type i32_t [||]) the_module in
   let builder = L.builder_at_end context (L.entry_block main) in
-  let ret = build_stmt_list globals locals builder main None program in
-  let _ = add_terminal ret (L.build_ret (L.const_int i32_t 0)) in
+  let main_builder = build_stmt_list globals locals builder main None program in
+  let _ = add_terminal main_builder (L.build_ret (L.const_int i32_t 0)) in
 
   (* return the module *)
   the_module

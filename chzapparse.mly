@@ -6,7 +6,7 @@ open Ast
 
 %token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK ARROW
 %token BWAND BWOR PLUS MINUS TIMES DIVIDE MOD NOT ASSIGN
-%token EQ NEQ LT LEQ GT GEQ AND OR
+%token EQ NEQ LT LEQ GT GEQ AND OR ASSERT
 %token NOELSE IF ELSE FOR WHILE CONTINUE BREAK
 %token INT UINT CHAR CONST FLOAT BOOL FUNC
 %token RETURN VOID TRUE FALSE
@@ -14,6 +14,7 @@ open Ast
 %token <int> INT_LITERAL
 %token <float> FLOAT_LITERAL
 %token <char> CHAR_LITERAL
+%token <string> STRING_LITERAL
 %token <bool> BOOL_LITERAL
 %token <string> ID
 %token EOF
@@ -99,6 +100,7 @@ stmt:
   | FOR LPAREN expr RPAREN stmt { For(Expr(Noexpr), $3, Noexpr, $5) }
   | BREAK SEMI      { Break }
   | CONTINUE SEMI   { Continue }
+  | ASSERT expr SEMI { Assert($2) }
   | RETURN expr_opt SEMI { Return($2) }
   // func def
   | typ ID LPAREN formals_list RPAREN stmt { Func(Bind($1, $2), $4, $6) }
@@ -115,6 +117,7 @@ expr:
   | BOOL_LITERAL      { BoolLit($1) }
   | FLOAT_LITERAL     { FloatLit($1) }
   | CHAR_LITERAL      { CharLit($1) }
+  | STRING_LITERAL    { StringLit($1) }
   | LBRACK args_opt RBRACK { ArrayLit($2) }
   | ID LBRACK expr RBRACK  { Subscription($1, $3) }
   | ID                { Id($1) }

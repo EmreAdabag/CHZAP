@@ -51,6 +51,7 @@ whitespace { token lexbuf }
 | "continue" { CONTINUE }
 | "break" { BREAK }
 | "return" { RETURN }
+| "assert" { ASSERT }
 (* | "true" { TRUE }
 | "false" { FALSE } *)
 
@@ -72,7 +73,8 @@ whitespace { token lexbuf }
 | (alpha) (alpha | digit | '_')* as lit { ID(lit) }
 | digit+ as lit { INT_LITERAL(int_of_string lit) }
 | floatnumber as lit { FLOAT_LITERAL(float_of_string lit) }
-| "'" ( _ as c) "'" { CHAR_LITERAL(c) }
+| "'" ( _ as c ) "'" { CHAR_LITERAL(c) }
+| "\"" ( [^'"']* as s ) "\"" { STRING_LITERAL(s) }
 
 | eof    { EOF }
 | _ as c { raise (Failure("illegal character " ^ Char.escaped c)) }

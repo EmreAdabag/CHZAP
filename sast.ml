@@ -7,6 +7,7 @@ and sx =
   | SIntLit of int
   | SBoolLit of bool
   | SCharLit of char
+  | SStringLit of string
   | SFloatLit of float
   | SArrayLit of sexpr list
   | SId of string
@@ -31,6 +32,7 @@ and sstmt =
   | SWhile of sexpr * sstmt
   | SContinue
   | SBreak
+  | SAssert of sexpr
   (*S return *)
   | SReturn of sexpr
   (*S func_def *)
@@ -55,6 +57,7 @@ let rec string_of_sexpr (t, e) =
       | SBoolLit(true) -> "true"
       | SBoolLit(false) -> "false"
       | SCharLit(l) -> Char.escaped l
+      | SStringLit(l) -> l
       | SFloatLit(l) -> string_of_float l
       | SArrayLit(l) -> "[" ^ String.concat "," (List.map string_of_sexpr l) ^ "]"
       | SId(s) -> s
@@ -86,6 +89,7 @@ and string_of_sstmt = function
     string_of_sexpr e3 ^ ") " ^ string_of_sstmt s
   | SContinue -> "continue;\n"
   | SBreak -> "break;\n"
+  | SAssert(e) -> "assert " ^ (string_of_sexpr e) ^ ";\n"
   (* | SFunc(f) -> string_of_func f *)
   | SFunc(b, bl, s) -> "function " ^ string_of_bind b ^ " (" ^ String.concat ", " 
     (List.map string_of_bind bl) ^ ")\n" ^ string_of_sstmt s ^ "\n"
