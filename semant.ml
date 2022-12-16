@@ -17,7 +17,6 @@ let check (program : stmt list) =
   let (locals : tbl_typ) = Hashtbl.create 1000 in
 
   (* Collect function declarations for built-in functions: no bodies *)
-  Hashtbl.add globals "print" (Ftyp(Int, [Int]));
 
   (* Return a variable from an input hash table *)
   let type_of_identifier (s : string) (globalvars : tbl_typ) (localvars : tbl_typ) : typ = 
@@ -189,25 +188,31 @@ let check (program : stmt list) =
     |  _ -> raise (Failure ("expected Boolean expression in " ^ string_of_expr e))
 
   and check_call fname args call globalvars localvars = 
-    let ty = 
-      if Hashtbl.mem localvars fname then Hashtbl.find localvars fname
-      else if Hashtbl.mem globalvars fname then Hashtbl.find globalvars fname
-      else raise (Failure ("unrecognized function " ^ fname)) 
-    in
-      match ty with
-      | Ftyp(rt, tl) -> 
-        if List.length args != List.length tl then 
-          raise (Failure ("expecting " ^ string_of_int (List.length args) ^
-          " arguments in " ^ string_of_expr call))
-        else let check_c ft e =
-          let (et, e') = check_expr e globalvars localvars in
-          let err = "illegal argument found " ^ string_of_typ et ^
-                    " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
-          in (check_assign ft et err false, e')
-        in
-        let args' = List.map2 check_c tl args
-        in (rt, SCall(fname, args'))
-      | _ -> raise(Failure "invalid call")
+      match fname with
+        "print" -> 
+          let arg = if List.length args = 1 then check_expr (List.hd args) globalvars localvars
+            else raise (Failure ("expected one argument for " ^ fname)) in
+          (Int, SCall("print", [ arg ]))
+      | _ ->
+        let ty = 
+          if Hashtbl.mem localvars fname then Hashtbl.find localvars fname
+          else if Hashtbl.mem globalvars fname then Hashtbl.find globalvars fname
+          else raise (Failure ("unrecognized function " ^ fname)) 
+        in 
+          match ty with
+          | Ftyp(rt, tl) -> 
+            if List.length args != List.length tl then 
+              raise (Failure ("expecting " ^ string_of_int (List.length args) ^
+              " arguments in " ^ string_of_expr call))
+            else let check_c ft e =
+              let (et, e') = check_expr e globalvars localvars in
+              let err = "illegal argument found " ^ string_of_typ et ^
+                        " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
+              in (check_assign ft et err false, e')
+            in
+            let args' = List.map2 check_c tl args
+            in (rt, SCall(fname, args'))
+          | _ -> raise(Failure "invalid call")
 
   (* return semantically checked function *)
   and check_func func (globalvars : tbl_typ) (localvars : tbl_typ) : sstmt =
