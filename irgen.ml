@@ -32,6 +32,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
   and f64_t      = L.double_type context (* prob with floats *)
   and void_t     = L.void_type   context
   and char_t     = L.i8_type     context
+  and char_pt    = L.pointer_type (L.i8_type context)
   and i1_t       = L.i1_type     context
   in
 
@@ -46,6 +47,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | A.Float -> f64_t
     | A.Void -> void_t 
     | A.Char -> char_t
+    | A.String -> char_pt
     (* type checks are the job of semantics *)
     | A.Const(t) -> ltype_of_typ t
     | A.Arr(_) -> raise (Failure ("Arr not implemented"))
@@ -60,6 +62,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
     if Hashtbl.mem localvars s then Hashtbl.find localvars s 
     else Hashtbl.find globalvars s
   in
+
   (* Return a list of types from a list of bindings *)
   let rec types_of_binds (binds : A.bind list) : A.typ list =
     match binds with
@@ -67,20 +70,35 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | A.Bind(x, _) :: t -> x :: types_of_binds t
   in
 
+  (* return a llvm function type from a list of bindings *)
   let ftype_of_binds (Bind(rt, _) : A.bind) (bl : A.bind list) =
     L.function_type (ltype_of_typ rt) (Array.of_list (List.map ltype_of_typ (types_of_binds bl)))
   in
 
+  (* add return stmt if not *)
   let add_terminal builder instr =
     match L.block_terminator (L.insertion_block builder) with
     | Some _ -> ()
     | None -> ignore (instr builder) in
 
+  (* build function arguments *)
+  let rec build_arg globals locals builder = function
+    | A.Ftyp(_, _), SId(fname) -> 
+      let faddr = addr_of_identifier fname globals locals in
+      L.build_load faddr (fname ^ "_ptr") builder
+    | sx -> build_expr globals locals builder sx
+
   (* Construct code for an expression; return its value *)
-  let rec build_expr (globalvars : tbl_typ) (localvars : tbl_typ) builder ((_, e) : sexpr) = match e with
+  and build_expr (globalvars : tbl_typ) (localvars : tbl_typ) builder ((_, e) : sexpr) = match e with
     | SIntLit(i)          -> L.const_int i32_t i
     | SBoolLit(b)         -> L.const_int i1_t (if b then 1 else 0)
     | SCharLit(c)         -> L.const_int char_t (Char.code c)
+    | SStringLit(s)       -> 
+      let clst = List.map (fun c -> L.const_int char_t (Char.code c)) (List.of_seq (String.to_seq s)) in
+      let cstr = L.const_array char_t (Array.of_list clst) in
+      let addr = L.build_alloca char_pt "_const_str" builder in
+      ignore(L.build_store cstr addr builder);
+      addr
     | SFloatLit(f)        -> L.const_float f64_t f
     | SArrayLit(l)        -> raise (Failure ("Arr not implemented"))
     | SId(s)       -> L.build_load (addr_of_identifier s globalvars localvars) s builder
@@ -136,25 +154,25 @@ let translate (program : sstmt list) : Llvm.llmodule =
       let v = addr_of_identifier var globalvars localvars in
       ignore(L.build_store e' v builder); e'
     | SSubscription(_, _) -> raise (Failure ("TODO"))
-    | SCall ("print", [e]) ->
-      let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
-      L.build_call printf_func [| int_format_str ; (build_expr globalvars localvars builder e) |]
-        "printf" builder
+    | SCall ("print", fmt :: args) ->
+      let fmts = 
+        (match fmt with
+        | String, SStringLit(s) -> s
+        | t, sx -> 
+          let err = "illegal argument (" ^ (string_of_sexpr (t, sx)) ^ "): no know conversion from " ^ 
+          (A.string_of_typ t) ^ "to string" in
+          raise (Failure err))
+      in
+      let (format_str : L.llvalue) = L.build_global_stringptr fmts "fmt" builder in
+      let (print_args : L.llvalue list) = List.rev (List.map (build_arg globalvars localvars builder) (List.rev args)) in
+      L.build_call printf_func (Array.of_list (format_str :: print_args)) "printf" builder
     | SCall(f, args) -> 
       (* ignore(print_endline f); *)
       let addr = (addr_of_identifier f globalvars localvars) in
       (* ignore(print_endline (L.string_of_lltype (L.type_of addr))); *)
       let the_function = L.build_load addr (f ^ "_call") builder in
       (* ignore(print_endline (L.string_of_lltype (L.type_of the_function))); *)
-      let build_arg = function
-        | A.Ftyp(_, _), SId(fname) -> 
-          let faddr = addr_of_identifier fname globalvars localvars in
-          L.build_load faddr (fname ^ "_ptr") builder
-        (* | A.Ftyp(_, _), SAfunc(_, _, _) ->
-          let faddr =  *)
-        | sx -> build_expr globalvars localvars builder sx
-      in
-      let llargs = List.rev (List.map build_arg (List.rev args)) in
+      let llargs = List.rev (List.map (build_arg globalvars localvars builder) (List.rev args)) in
       (* ignore(List.map (fun x -> print_endline (L.string_of_llvalue x)) llargs); *)
       let result = f ^ "_result" in
       L.build_call the_function (Array.of_list llargs) result builder

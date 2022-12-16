@@ -102,6 +102,7 @@ let check (program : stmt list) =
     | IntLit l -> (Int, SIntLit l)
     | BoolLit l -> (Bool, SBoolLit l)
     | CharLit l -> (Char, SCharLit l)
+    | StringLit l -> (String, SStringLit l)
     | FloatLit l -> (Float, SFloatLit l)
     | ArrayLit l -> 
       let res = match l with
