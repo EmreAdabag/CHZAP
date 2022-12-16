@@ -14,6 +14,7 @@ type typ =
 
 type infer_typ = 
   | Auto 
+  | Const_auto
 
 (* int x: name binding *)
 type bind = Bind of typ * string
@@ -103,6 +104,7 @@ let rec string_of_typ = function
 
 let rec string_of_infer_typ = function
   | Auto -> "auto"
+  | Const_auto -> "const auto"
 
 let string_of_bind (b : bind) = match b with
   | Bind(t, s) -> s ^ ": " ^ string_of_typ t

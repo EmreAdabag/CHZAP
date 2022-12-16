@@ -8,7 +8,7 @@ open Ast
 %token BWAND BWOR PLUS MINUS TIMES DIVIDE MOD NOT ASSIGN
 %token EQ NEQ LT LEQ GT GEQ AND OR
 %token NOELSE IF ELSE FOR WHILE CONTINUE BREAK
-%token INT CHAR CONST FLOAT BOOL FUNC AUTO
+%token INT CHAR CONST FLOAT BOOL FUNC AUTO CONST_AUTO
 %token RETURN VOID TRUE FALSE
 %token COMMA LB TAB INDENT DEDENT
 %token <int> INT_LITERAL
@@ -64,6 +64,7 @@ typ_list:
 
 auto_typ:
   | AUTO  { Auto }
+  | CONST_AUTO { Const_auto }
 
 basic_typ:
   | INT   { Int   }

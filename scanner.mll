@@ -64,6 +64,7 @@ whitespace { token lexbuf }
 | "const" { CONST }
 | "function" { FUNC }
 | "auto"    { AUTO }
+| "const auto" { CONST_AUTO }
 
 
 (* literals *)

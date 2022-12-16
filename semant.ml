@@ -32,6 +32,7 @@ let check (program : stmt list) =
     | Bind(x, _) :: t -> x :: types_of_binds t
   in
 
+
   (* Raise an exception if the given rvalue type cannot be assigned to
   the given lvalue type *)
   let check_assign (lvaluet : typ) (rvaluet : typ) (err : string) (is_bind : bool) : typ =
@@ -72,7 +73,11 @@ let check (program : stmt list) =
       SBstmt(Bind(t, id))
     | BAIstmt(t, id, e) -> 
       let (t', _) = check_expr e globalvars localvars in
-      (check_stmt (BAstmt (Bind(t', id), e)) globalvars localvars Void)
+      let b = (match t with
+        Const_auto -> Bind(Const(t'), id)
+        | _ -> Bind(t', id)
+      ) in
+      (check_stmt (BAstmt (b, e)) globalvars localvars Void)
     | BAstmt(b, e) -> 
       let Bind(t, id) = b in
       let _ = check_stmt (Bstmt(b)) globalvars localvars Void in
