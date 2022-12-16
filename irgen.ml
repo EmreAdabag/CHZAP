@@ -147,8 +147,14 @@ let translate (program : sstmt list) : Llvm.llmodule =
         "printf" builder
     | SCall(f, args) -> 
       (* ignore(print_endline f); *)
-      let the_function = addr_of_identifier f globalvars localvars in
-      (* ignore(print_endline (L.string_of_llvalue the_function)); *)
+      let addr = addr_of_identifier f globalvars localvars in
+      (* ignore(print_endline (L.string_of_lltype (L.type_of addr))); *)
+      let the_function = 
+        match (L.type_of addr) with
+        (* |  *)
+        | _ -> L.build_load addr f builder
+      in
+      (* ignore(print_endline (L.string_of_lltype (L.type_of the_function))); *)
       (* let llargs = List.rev (List.map (build_expr globalvars localvars builder) (List.rev args)) in *)
       (* ignore(List.map (fun x -> print_endline (L.string_of_llvalue x)) llargs); *)
       let build_arg = function
@@ -162,8 +168,11 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | SAfunc(rt, bl, s) ->
       (* define the function, give it a default name *)
       let fname = "_anonymous" in
-      let the_function = L.define_function fname (ftype_of_binds (Bind(rt, fname)) bl) the_module in
+      let ft = ftype_of_binds (Bind(rt, fname)) bl in
+      let the_function = L.define_function fname ft the_module in
       (* we don't store anonymous functions to symbol tables upon definition *)
+      let fp = L.build_alloca (L.pointer_type ft) fname builder in
+      ignore(L.build_store the_function fp builder);
       (* get the builder *)
       let fbuilder = L.builder_at_end context (L.entry_block the_function) in
       (* create a new "global" scope with variables outside of current scope *)
@@ -171,17 +180,19 @@ let translate (program : sstmt list) : Llvm.llmodule =
       let _ = Hashtbl.iter (fun k v -> Hashtbl.add globals k v) localvars in
       (* create a "local" scope with all formals *)
       let locals : tbl_typ = Hashtbl.create 1000 in
-      let create_var (A.Bind(t, n) : A.bind) = 
+      let create_var (A.Bind(t, n) : A.bind) p = 
         let local = L.build_alloca (ltype_of_typ t) n fbuilder in
+        let _ = L.build_store p local fbuilder in
         Hashtbl.add locals n local
       in
-      let _ = List.map create_var bl in
+      let _ = List.map2 create_var bl (Array.to_list (L.params the_function)) in
       (* build stmt *)
       let rbuilder = build_stmt globals locals fbuilder s in
       (* add return if not: void *)
       ignore(add_terminal rbuilder (L.build_ret (L.const_int void_t 0)));
       (* return the function *)
-      the_function
+      (* the_function *)
+      fp
   
   (* Build the code for the given statement; return the builder for
     the statement's successor (i.e., the next instruction will be built
@@ -245,9 +256,15 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | SFunc(b, bl, s) ->
        (* define the function *)
       let A.Bind(rt, fname) = b in
-      let the_function = L.define_function fname (ftype_of_binds b bl) the_module in
+      let ft = ftype_of_binds b bl in
+      let the_function = L.define_function fname ft the_module in
+      (* get the ptr to this function *)
+      let fp = L.build_alloca (L.pointer_type ft) fname builder in
+      ignore(L.build_store the_function fp builder);
+      (* ignore(print_endline (L.string_of_lltype (L.type_of the_function))); *)
       (* store the function in global symbol table *)
-      let _ = Hashtbl.add globalvars fname the_function in
+      (* let _ = Hashtbl.add globalvars fname the_function in *)
+      ignore(Hashtbl.add globalvars fname fp);
       (* get the builder *)
       let fbuilder = L.builder_at_end context (L.entry_block the_function) in
       (* create a new "global" scope with variables outside of current scope *)
