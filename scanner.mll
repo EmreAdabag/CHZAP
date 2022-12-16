@@ -58,12 +58,12 @@ whitespace { token lexbuf }
 (* types *)
 | "bool" { BOOL }
 | "char" { CHAR }
-| "uint" { UINT }
 | "int" { INT }
 | "float" { FLOAT }
 | "void" { VOID } 
 | "const" { CONST }
 | "function" { FUNC }
+| "auto"    { AUTO }
 
 
 (* literals *)

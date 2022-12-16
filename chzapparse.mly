@@ -8,7 +8,7 @@ open Ast
 %token BWAND BWOR PLUS MINUS TIMES DIVIDE MOD NOT ASSIGN
 %token EQ NEQ LT LEQ GT GEQ AND OR
 %token NOELSE IF ELSE FOR WHILE CONTINUE BREAK
-%token INT UINT CHAR CONST FLOAT BOOL FUNC
+%token INT CHAR CONST FLOAT BOOL FUNC AUTO
 %token RETURN VOID TRUE FALSE
 %token COMMA LB TAB INDENT DEDENT
 %token <int> INT_LITERAL
@@ -62,6 +62,9 @@ typ_list:
   | typ_no_arr { [$1] }
   | typ_no_arr COMMA typ_list { $1 :: $3 }
 
+auto_typ:
+  | AUTO  { Auto }
+
 basic_typ:
   | INT   { Int   }
   | BOOL  { Bool  }
@@ -74,7 +77,6 @@ stmt_list:
   | stmt stmt_list { $1 :: $2 }
 
 bind:
-  // | ID { Bind(Dyn, $1) }
   | typ ID { Bind($1, $2) }
 
 formals_list:
@@ -90,6 +92,7 @@ stmt:
   // decls
   | bind SEMI { Bstmt($1) }
   | bind ASSIGN expr SEMI { BAstmt($1, $3) }
+  | auto_typ ID ASSIGN expr SEMI { BAIstmt($1, $2, $4) }
   // control flows
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
@@ -102,8 +105,6 @@ stmt:
   // func def
   | typ ID LPAREN formals_list RPAREN stmt { Func(Bind($1, $2), $4, $6) }
 
-// decl:
-//   | typ ID SEMI { Bind($1, $2) }
 
 expr_opt:
   | /* nothing */ { Noexpr }

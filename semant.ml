@@ -70,6 +70,9 @@ let check (program : stmt list) =
       if Hashtbl.mem localvars id then raise(Failure ("duplicate variable declaration: " ^ id))
       else let _ = Hashtbl.add localvars id t in
       SBstmt(Bind(t, id))
+    | BAIstmt(t, id, e) -> 
+      let (t', _) = check_expr e globalvars localvars in
+      (check_stmt (BAstmt (Bind(t', id), e)) globalvars localvars Void)
     | BAstmt(b, e) -> 
       let Bind(t, id) = b in
       let _ = check_stmt (Bstmt(b)) globalvars localvars Void in
@@ -96,7 +99,7 @@ let check (program : stmt list) =
                   string_of_typ rettyp ^ " in " ^ string_of_expr e))
 
   (* Return a semantically-checked expression, i.e., with a type *)
-  and check_expr (ex : expr) (globalvars : tbl_typ) (localvars : tbl_typ) =
+  and check_expr (ex : expr) (globalvars : tbl_typ) (localvars : tbl_typ) : sexpr =
     match ex with
     | IntLit l -> (Int, SIntLit l)
     | BoolLit l -> (Bool, SBoolLit l)
@@ -235,7 +238,7 @@ let check (program : stmt list) =
     let _ = Hashtbl.iter add_fn localvars in
     (* create local scope and fill with formals, locally scoped vars can't be redefined but globals can *)
     let locals = Hashtbl.create 1000 in
-    let _ = List.map (fun (Bind(ty, name)) -> Hashtbl.add locals name ty) formals in
+    let _ = List.map (fun (Bind((ty : typ), name)) -> Hashtbl.add locals name ty) formals in
     check_stmt body globals locals rt
 
   in check_stmt_list program globals locals Void 

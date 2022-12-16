@@ -6,14 +6,18 @@ type uop = Not
 
 (* type ftyp = typ * typ list *)
 type typ = 
-  | Int | Bool | Float | Char | Void 
+  | Int | Bool | Float | Char | Void
   | Arr of typ 
   | Const of typ 
   | Ftyp of typ * typ list
   | Dyn 
 
+type infer_typ = 
+  | Auto 
+
 (* int x: name binding *)
 type bind = Bind of typ * string
+
 
 type expr =
   | IntLit of int
@@ -37,6 +41,7 @@ and stmt =
   (* consider binding as a separate stmt *)
   | Bstmt of bind
   | BAstmt of bind * expr
+  | BAIstmt of infer_typ * string * expr
   | Block of stmt list
   | Expr of expr
   | If of expr * stmt * stmt
@@ -96,7 +101,10 @@ let rec string_of_typ = function
     (List.map string_of_typ tl) ^ ") -> " ^ string_of_typ t
   | Dyn -> "dyn"
 
-let string_of_bind = function
+let rec string_of_infer_typ = function
+  | Auto -> "auto"
+
+let string_of_bind (b : bind) = match b with
   | Bind(t, s) -> s ^ ": " ^ string_of_typ t
 
 let rec string_of_expr = function
@@ -125,6 +133,8 @@ and string_of_stmt stmt =
   | Bstmt(b) -> string_of_bind b ^ "\n"
   | BAstmt(Bind(t, n), e) -> 
     string_of_bind (Bind(t, n)) ^ " " ^ string_of_expr (Assign(n, e)) ^ "\n"
+  | BAIstmt(t, n, e) -> 
+    n ^ ": " ^ string_of_infer_typ t ^ string_of_expr (Assign(n, e)) ^ "\n"
   | Block(stmts) ->
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
