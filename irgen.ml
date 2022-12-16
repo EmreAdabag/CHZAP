@@ -49,7 +49,6 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | A.Ftyp(t, tl) -> 
       let ft = L.function_type (ltype_of_typ t) (Array.of_list (List.map ltype_of_typ tl)) in
       L.pointer_type ft
-    | A.Dyn -> raise (Failure ("Dyn not implemented"))
   in
 
   let remove_const (t : A.typ) : A.typ = match t with
@@ -191,11 +190,24 @@ let translate (program : sstmt list) : Llvm.llmodule =
       ignore(L.build_store e' v builder); e'
     | SSubscription(_, _) -> raise (Failure ("TODO"))
 
+    (* | SCall ("print", [(typ, _) as e]) ->
+      let t = remove_const typ in
+      ( match t with
+      | Int -> L.build_call print_i_func [| build_expr globalvars localvars builder e |]
+        "print_i" builder
+      | Float -> L.build_call print_f_func [| build_expr globalvars localvars builder e |]
+        "print_f" builder
+      | Bool -> L.build_call print_b_func [| build_expr globalvars localvars builder e |]
+        "print_b" builder
+      | _ -> raise (Failure ("Print type " ^ Ast.string_of_typ typ ^ " not suppoted"))
+      ) *)
+
     | SCall ("print", args) ->
       (match args with
       | [] -> build_print "%c" (String, SCharLit('\n')) globalvars localvars builder
       | ((typ, _) as e) :: el -> 
-        ignore(match typ with
+        let t = remove_const typ in
+        ignore(match t with
           (* | Int -> L.build_call print_i_func [| build_expr globalvars localvars builder e |]
             "print_i" builder *)
           | Int -> build_print "%d" e globalvars localvars builder
@@ -208,18 +220,6 @@ let translate (program : sstmt list) : Llvm.llmodule =
           | _ -> raise (Failure ("Print type " ^ Ast.string_of_typ typ ^ "not suppoted")));
         ignore(build_print "%c" (String, SCharLit(' ')) globalvars localvars builder);
         build_expr globalvars localvars builder (A.Void, SCall("print", el)))
-
-    (* | SCall ("print", [(typ, _) as e]) ->
-      let t = remove_const typ in
-      ( match t with
-      | Int -> L.build_call print_i_func [| build_expr globalvars localvars builder e |]
-        "print_i" builder
-      | Float -> L.build_call print_f_func [| build_expr globalvars localvars builder e |]
-        "print_f" builder
-      | Bool -> L.build_call print_b_func [| build_expr globalvars localvars builder e |]
-        "print_b" builder
-      | _ -> raise (Failure ("Print type " ^ Ast.string_of_typ typ ^ " not suppoted"))
-      ) *)
 
     | SCall(f, args) -> 
       (* ignore(print_endline f); *)

@@ -55,6 +55,10 @@ basic_typ:
   | FLOAT { Float }
   // | VOID  { Void }
 
+auto_typ:
+  | AUTO  { Auto }
+  | CONST_AUTO { Const_auto }
+
 typ_no_arr:
   | basic_typ       { $1 }
   | CONST basic_typ { Const($2) }

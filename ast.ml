@@ -10,7 +10,6 @@ type typ =
   | Arr of typ 
   | Const of typ 
   | Ftyp of typ * typ list
-  | Dyn 
 
 type infer_typ = 
   | Auto 
@@ -103,7 +102,6 @@ let rec string_of_typ = function
   | Void -> "void"
   | Ftyp(t, tl) -> "function (" ^ String.concat ", " 
     (List.map string_of_typ tl) ^ ") -> " ^ string_of_typ t
-  | Dyn -> "dyn"
 
 let rec string_of_infer_typ = function
   | Auto -> "auto"
