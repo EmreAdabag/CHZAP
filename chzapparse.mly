@@ -47,27 +47,28 @@ open Ast
 program:
   | stmt_list EOF { $1 }
 
-typ_no_arr:
-  | basic_typ       { $1 }
-  | CONST basic_typ { Const($2) }
-  // | ftyp { Func($1) }
-
-typ:
-  | typ_no_arr { $1 }
-  | typ LBRACK RBRACK   { Arr($1) }
-  | FUNC LPAREN typ_list RPAREN ARROW typ_no_arr { Ftyp($6, $3) }
-
-/* type list is forced to be non-empty (use "void" as placeholder) */
-typ_list:
-  | typ_no_arr { [$1] }
-  | typ_no_arr COMMA typ_list { $1 :: $3 }
-
 basic_typ:
   | INT   { Int   }
   | BOOL  { Bool  }
   | CHAR  { Char }
   | FLOAT { Float }
-  | VOID  { Void }
+  // | VOID  { Void }
+
+typ_no_arr:
+  | basic_typ       { $1 }
+  | CONST basic_typ { Const($2) }
+  // | ftyp { Func($1) }
+
+/* type list is forced to be non-empty (use "void" as placeholder) */
+typ_list:
+  | VOID { [] }
+  | typ_no_arr { [$1] }
+  | typ_no_arr COMMA typ_list { $1 :: $3 }
+
+typ:
+  | typ_no_arr { $1 }
+  | typ LBRACK RBRACK   { Arr($1) }
+  | FUNC LPAREN typ_list RPAREN ARROW typ_no_arr { Ftyp($6, $3) }
 
 stmt_list:
   | /* nothing */ { [] }
