@@ -145,21 +145,20 @@ let translate (program : sstmt list) : Llvm.llmodule =
         "printf" builder
     | SCall(f, args) -> 
       (* ignore(print_endline f); *)
-      let addr = addr_of_identifier f globalvars localvars in
+      let addr = (addr_of_identifier f globalvars localvars) in
       (* ignore(print_endline (L.string_of_lltype (L.type_of addr))); *)
-      let the_function = 
-        match (L.type_of addr) with
-        (* |  *)
-        | _ -> L.build_load addr f builder
-      in
+      let the_function = L.build_load addr (f ^ "_call") builder in
       (* ignore(print_endline (L.string_of_lltype (L.type_of the_function))); *)
-      (* let llargs = List.rev (List.map (build_expr globalvars localvars builder) (List.rev args)) in *)
-      (* ignore(List.map (fun x -> print_endline (L.string_of_llvalue x)) llargs); *)
       let build_arg = function
-        | A.Ftyp(_, _), SId(fname) -> addr_of_identifier fname globalvars localvars
+        | A.Ftyp(_, _), SId(fname) -> 
+          let faddr = addr_of_identifier fname globalvars localvars in
+          L.build_load faddr (fname ^ "_ptr") builder
+        (* | A.Ftyp(_, _), SAfunc(_, _, _) ->
+          let faddr =  *)
         | sx -> build_expr globalvars localvars builder sx
       in
       let llargs = List.rev (List.map build_arg (List.rev args)) in
+      (* ignore(List.map (fun x -> print_endline (L.string_of_llvalue x)) llargs); *)
       let result = f ^ "_result" in
       L.build_call the_function (Array.of_list llargs) result builder
     | SNoexpr -> L.const_int void_t 0
@@ -187,10 +186,10 @@ let translate (program : sstmt list) : Llvm.llmodule =
       (* build stmt *)
       let rbuilder = build_stmt globals locals fbuilder s in
       (* add return if not: void *)
-      ignore(add_terminal rbuilder (L.build_ret (L.const_int void_t 0)));
+      ignore(add_terminal rbuilder (L.build_ret (L.const_int (ltype_of_typ rt) 0)));
       (* return the function *)
-      (* the_function *)
-      fp
+      the_function
+      (* fp *)
   
   (* Build the code for the given statement; return the builder for
     the statement's successor (i.e., the next instruction will be built
@@ -202,17 +201,18 @@ let translate (program : sstmt list) : Llvm.llmodule =
     (* allocate var and add address to locals *)
     | SBstmt(Bind(t, n)) -> 
       (* handle function type binding *)
-      (match t with
-      (* is a function *)
-      | A.Ftyp(t, tl) -> 
-        let ft = L.function_type (ltype_of_typ t) (Array.of_list (List.map ltype_of_typ tl)) in
-        let the_function = L.define_function n ft the_module in
-        let _ = Hashtbl.add localvars n the_function in
-        builder
-      (* is a value *)
-      | _ ->
-        let local = L.build_alloca (ltype_of_typ t) n builder in
-        ignore(Hashtbl.add localvars n local); builder)
+      let local = 
+        (match t with
+        (* is a function *)
+        | A.Ftyp(t, tl) -> 
+          let ft = L.function_type (ltype_of_typ t) (Array.of_list (List.map ltype_of_typ tl)) in
+          (* let the_function = L.define_function n ft the_module in *)
+          L.build_alloca (L.pointer_type ft) n builder
+        (* is a value *)
+        | _ -> L.build_alloca (ltype_of_typ t) n builder)
+      in
+      ignore(Hashtbl.add localvars n local); 
+      builder
     | SBAstmt(b, e) -> 
       (* bind and assign *)
       let b = build_stmt globalvars localvars builder (SBstmt(b)) in
@@ -294,7 +294,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
       (* build stmt *)
       let rbuilder = build_stmt globals locals fbuilder s in
       (* add return if not: void *)
-      ignore(add_terminal rbuilder (L.build_ret (L.const_int void_t 0)));
+      ignore(add_terminal rbuilder (L.build_ret (L.const_int (ltype_of_typ rt) 0)));
       (* return the original builder *)
       builder
 

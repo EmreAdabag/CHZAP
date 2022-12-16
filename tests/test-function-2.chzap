@@ -7,4 +7,7 @@ int add(int a, int b) {
 int sum(int a, int b, function(int, int) -> int f) {
     return f(a, b);
 }
+
+int x = add(1, 2);
+int y = sum(1, 2, add);
 // there must be a new line at the end of file

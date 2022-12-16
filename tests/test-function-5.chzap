@@ -7,15 +7,15 @@ float add_f(float a, float b) {
     return a + b;
 }
 
-float sum_thing(int a, int b, function(float, float) -> float f) {
+float sum_thing(float a, float b, function(float, float) -> float f) {
     float c = 1.0;
     float d = 2.0;
     return f(c, d) + a + b;
 }
 
-function(void) -> int func_decl;
+function(char) -> int func_decl;
 
-int c = 2;
+float c = 2.0;
 //function(float x, float y) -> float { return x + y; };
-sum_thing(c, 3, function(float x, float y) -> float { return x + y; });
+sum_thing(c, 3.0, function(float x, float y) -> float { return x + y; });
 
