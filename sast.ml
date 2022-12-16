@@ -58,7 +58,7 @@ let rec string_of_sexpr (t, e) =
       | SFloatLit(l) -> string_of_float l
       | SArrayLit(l) -> "[" ^ String.concat "," (List.map string_of_sexpr l) ^ "]"
       | SId(s) -> s
-      | SUnop(o, e) -> "TODO SUnop"
+      | SUnop(o, e) -> "!" ^ string_of_sexpr e
       | SBinop(e1, o, e2) ->
         string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
       | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e

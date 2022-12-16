@@ -1,7 +1,7 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
 type op = 
-  Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr | Exp
+  Add | Sub | Mul | Div | Mod | Eq | Neq | Less | Greater | Leq | Geq | And | Or | BWAnd | BWOr
 type uop = Not
 
 (* type ftyp = typ * typ list *)
@@ -68,7 +68,6 @@ let string_of_op = function
     Add -> "+"
   | Sub -> "-"
   | Mul -> "*"
-  | Exp -> "**"
   | Div -> "/"
   | Mod -> "%"
   | Eq -> "=="
@@ -119,7 +118,6 @@ let rec string_of_expr = function
   | Noexpr -> ""
   | Afunc(t, bl, s) -> "lambda: " ^ string_of_typ t ^ " (" ^ String.concat ", " 
     (List.map string_of_bind bl) ^ ") {\n" ^ string_of_stmt s ^ "}"
-  (* TODO: printing of stmt in lambdas is not implemented *)
 
 and string_of_stmt stmt = 
 

@@ -1,0 +1,5 @@
+/* CHZAP exprs */
+/* cannot negate non-boolean types */
+
+int a = 1;
+!a;

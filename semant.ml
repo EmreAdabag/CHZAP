@@ -95,7 +95,6 @@ let check (program : stmt list) =
       if t = rettyp then SReturn (t, e')
       else raise (Failure ("return gives " ^ string_of_typ t ^ " expected " ^
                   string_of_typ rettyp ^ " in " ^ string_of_expr e))
-      (* TODO: need to check that return val matches declared return val ? maybe done*)
 
   (* Return a semantically-checked expression, i.e., with a type *)
   and check_expr (ex : expr) (globalvars : tbl_typ) (localvars : tbl_typ) =
@@ -156,7 +155,7 @@ let check (program : stmt list) =
       if t1 = t2 then
         (* Determine expression type based on operator and operand types *)
         let t = match op with
-            Add | Sub | Mul | Div | Mod | BWAnd | BWOr | Exp when t1 = Int -> Int
+            Add | Sub | Mul | Div | Mod | BWAnd | BWOr when t1 = Int -> Int
           | Add | Sub | Mul | Div when t1 = Float -> Float
           | Eq | Neq | Less | Greater | Geq | Leq when t1 = Int || t1 = Float || t1 = Bool -> Bool
           | And | Or when t1 = Bool -> Bool
@@ -165,7 +164,7 @@ let check (program : stmt list) =
         (t, SBinop((t1, e1'), op, (t2, e2')))
       else
         let t = match op with
-          Add | Sub | Mul | Div | Exp when t1 = Float && t2 = Int -> Float
+          Add | Sub | Mul | Div when t1 = Float && t2 = Int -> Float
           | Add | Sub | Mul | Div when t1 = Int && t2 = Float -> Float
           | Eq | Neq | Less | Greater | Geq | Leq when 
             (t1 = Int || t1 = Float || t1 = Bool) && (t2 = Int || t2 = Float || t2 = Bool) -> Bool

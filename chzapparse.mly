@@ -5,7 +5,7 @@ open Ast
 %}
 
 %token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK ARROW
-%token BWAND BWOR PLUS MINUS TIMES DIVIDE EXP MOD NOT ASSIGN
+%token BWAND BWOR PLUS MINUS TIMES DIVIDE MOD NOT ASSIGN
 %token EQ NEQ LT LEQ GT GEQ AND OR
 %token NOELSE IF ELSE FOR WHILE CONTINUE BREAK
 %token INT UINT CHAR CONST FLOAT BOOL FUNC
@@ -28,11 +28,12 @@ open Ast
 %right ASSIGN
 %left OR
 %left AND
+%left BWOR
+%left BWAND
 %left EQ NEQ
 %left GT GEQ LT LEQ
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
-%right EXP
 %right NOT
 
 %nonassoc LPAREN LBRACK LBRACE
@@ -119,7 +120,6 @@ expr:
   | expr PLUS expr    { Binop($1, Add, $3) }
   | expr MINUS expr   { Binop($1, Sub, $3) }
   | expr TIMES expr   { Binop($1, Mul, $3) }
-  | expr EXP expr     { Binop($1, Exp, $3) }
   | expr DIVIDE expr  { Binop($1, Div, $3) }
   | expr MOD expr     { Binop($1, Mod, $3) }
   | expr EQ expr      { Binop($1, Eq, $3) }
@@ -130,6 +130,8 @@ expr:
   | expr GEQ expr     { Binop($1, Geq, $3) }
   | expr AND expr     { Binop($1, And, $3) }
   | expr OR expr      { Binop($1, Or, $3) }
+  | expr BWAND expr   { Binop($1, BWAnd, $3)}
+  | expr BWOR expr   { Binop($1, BWOr, $3)}
   | NOT expr          { Unop(Not, $2) }
   | LPAREN expr RPAREN          { $2 }
   | ID ASSIGN expr    { Assign($1, $3) }
