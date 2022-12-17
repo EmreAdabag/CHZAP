@@ -53,27 +53,23 @@ basic_typ:
   | BOOL  { Bool  }
   | CHAR  { Char }
   | FLOAT { Float }
-  // | VOID  { Void }
+
+typ:
+  | basic_typ       { $1 }
+  | CONST basic_typ { Const($2) }
+  /* arrays are only allowed on basic types */
+  | basic_typ LBRACK RBRACK   { Arr($1) }
+  | FUNC LPAREN typ_list RPAREN ARROW typ { Ftyp($6, $3) }
+
+/* type list is forced to be non-empty (use "void" as placeholder) */
+typ_list:
+  | VOID               { [] }
+  | typ                { [$1] }
+  | typ COMMA typ_list { $1 :: $3 }
 
 auto_typ:
   | AUTO  { Auto }
   | CONST_AUTO { Const_auto }
-
-typ_no_arr:
-  | basic_typ       { $1 }
-  | CONST basic_typ { Const($2) }
-  // | ftyp { Func($1) }
-
-/* type list is forced to be non-empty (use "void" as placeholder) */
-typ_list:
-  | VOID { [] }
-  | typ_no_arr { [$1] }
-  | typ_no_arr COMMA typ_list { $1 :: $3 }
-
-typ:
-  | typ_no_arr { $1 }
-  | typ LBRACK RBRACK   { Arr($1) }
-  | FUNC LPAREN typ_list RPAREN ARROW typ_no_arr { Ftyp($6, $3) }
 
 stmt_list:
   | /* nothing */ { [] }
