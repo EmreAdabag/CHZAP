@@ -7,7 +7,7 @@ type uop = Not
 (* type ftyp = typ * typ list *)
 type typ = 
   | Int | Bool | Float | Char | Void 
-  | Arr of typ 
+  | Arr of typ *int
   | Const of typ 
   | Ftyp of typ * typ list
   | Dyn 
@@ -20,7 +20,7 @@ type expr =
   | BoolLit of bool
   | CharLit of char
   | FloatLit of float
-  | ArrayLit of expr list
+  | ArrayLit of expr list * int
   | Id of string
   | Binop of expr * op * expr
   | Unop of uop * expr
@@ -90,7 +90,7 @@ let rec string_of_typ = function
   | Bool -> "bool"
   | Char -> "char"
   | Float -> "float"
-  | Arr(t) -> string_of_typ t ^ "[]"
+  | Arr(t,i) -> string_of_typ t ^ "[" ^ string_of_int i ^"]"
   | Const(t) ->"const " ^ string_of_typ t 
   | Void -> "void"
   | Ftyp(t, tl) -> "function (" ^ String.concat ", " 
@@ -106,7 +106,7 @@ let rec string_of_expr = function
   | CharLit(l) -> Char.escaped l
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
-  | ArrayLit(el) -> "[" ^ String.concat "," (List.map string_of_expr el) ^ "]"
+  | ArrayLit(el,i) -> "[" ^ String.concat "," (List.map string_of_expr el) ^ "]:( of length " ^ string_of_int i ^")"
   | Id(s) -> s
   | Unop (o, e) -> string_of_uop o ^ string_of_expr e
   | Binop(e1, o, e2) ->

@@ -53,7 +53,7 @@ typ_no_arr:
 
 typ:
   | typ_no_arr { $1 }
-  | typ LBRACK RBRACK   { Arr($1) }
+  | typ LBRACK INT_LITERAL RBRACK   { Arr($1,$3) }
   | FUNC LPAREN typ_list RPAREN ARROW typ_no_arr { Ftyp($6, $3) }
 
 /* type list is forced to be non-empty (use "void" as placeholder) */
@@ -113,7 +113,7 @@ expr:
   | BOOL_LITERAL      { BoolLit($1) }
   | FLOAT_LITERAL     { FloatLit($1) }
   | CHAR_LITERAL      { CharLit($1) }
-  | LBRACK args_opt RBRACK { ArrayLit($2) }
+  | LBRACK args_opt RBRACK { ArrayLit($2, List.length $2) }
   | ID LBRACK expr RBRACK  { Subscription($1, $3) }
   | ID                { Id($1) }
   | expr PLUS expr    { Binop($1, Add, $3) }
