@@ -1,0 +1,4 @@
+/* CHZAP exprs */
+/* assigning undeclared variable */
+
+a = 2;
