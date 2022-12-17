@@ -8,7 +8,7 @@ and sx =
   | SBoolLit of bool
   | SCharLit of char
   | SFloatLit of float
-  | SArrayLit of sexpr list
+  | SArrayLit of sexpr list * int
   | SId of string
   | SBinop of sexpr * op * sexpr
   | SUnop of uop * sexpr
@@ -56,7 +56,7 @@ let rec string_of_sexpr (t, e) =
       | SBoolLit(false) -> "false"
       | SCharLit(l) -> Char.escaped l
       | SFloatLit(l) -> string_of_float l
-      | SArrayLit(l) -> "[" ^ String.concat "," (List.map string_of_sexpr l) ^ "]"
+      | SArrayLit(l,i) -> "[" ^ String.concat "," (List.map string_of_sexpr l) ^ "]:(size of length"
       | SId(s) -> s
       | SUnop(o, e) -> "TODO SUnop"
       | SBinop(e1, o, e2) ->

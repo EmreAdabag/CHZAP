@@ -104,7 +104,7 @@ let check (program : stmt list) =
     | BoolLit l -> (Bool, SBoolLit l)
     | CharLit l -> (Char, SCharLit l)
     | FloatLit l -> (Float, SFloatLit l)
-    | ArrayLit l -> 
+    | ArrayLit (l,size) -> 
       let res = match l with
       | [] -> (Arr Void, SArrayLit [])          (* empty list literal *)
       | hd::tl ->
@@ -117,7 +117,7 @@ let check (program : stmt list) =
           in
           let hd_type, _ = check_expr hd globalvars localvars in
           let listcheck = typecheck hd_type in
-          (Arr hd_type, SArrayLit (List.map listcheck l))
+          (Arr (hd_type,size), SArrayLit (List.map listcheck l,size))
         in res
     | Id var -> (type_of_identifier var globalvars localvars, SId var)
     | Assign(var, e) as ex ->
