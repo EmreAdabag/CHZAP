@@ -8,6 +8,7 @@ type uop = Not
 type typ = 
   | Int | Bool | Float | Char | String | Void 
   | Arr of typ * int
+  | Darr of typ
   | Const of typ 
   | Ftyp of typ * typ list
 
@@ -97,6 +98,7 @@ let rec string_of_typ = function
   | String -> "string"
   | Float -> "float"
   | Arr(t, s) -> string_of_typ t ^ "[" ^ (string_of_int s) ^ "]"
+  | Darr(t) -> string_of_typ t ^ "[]"
   | Const(t) ->"const " ^ string_of_typ t 
   | Void -> "void"
   | Ftyp(t, tl) -> "function (" ^ String.concat ", " 

@@ -1,0 +1,14 @@
+/* CHZAP arrays */
+
+int[2] get_arr() {
+    int[2] arr = [1, 2];
+    return arr;
+}
+
+/*int[] get_darr() {
+    int[] arr = [1, 2];
+    return arr;
+}*/
+
+int[2] a = get_arr();
+//int[] da = get_darr();

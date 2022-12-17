@@ -43,11 +43,12 @@ let check (program : stmt list) =
         Int | Bool | Char | Float | Void -> if t2 = t1 then Const(t1) else raise (Failure err)
         | _ -> raise (Failure err)
       else raise (Failure err)
+    (* empty arrays are allowed to be assigned to any array *)
+    | Arr(_, _), Arr(Void, _) -> lvaluet 
+    (* pre-allocated arrays are allowed to be assigned to dynamic arrays *)
+    | Darr(t1), Arr(t2, _) -> lvaluet
     (* regular *)
     | _ when lvaluet = rvaluet -> lvaluet 
-    (* arrays *)
-    | _, Arr(Void, _) -> lvaluet
-    (* | _, Arr(Void, _) -> lvaluet *)
     (* error *)
     | _ -> raise (Failure err)
   in
@@ -136,7 +137,8 @@ let check (program : stmt list) =
       let err = "illegal assignment " ^ string_of_typ ty ^ " = " ^
                 string_of_typ rt ^ " in " ^ string_of_expr ex
       in
-      (check_assign ty rt err false, SAssign(var, (rt, e')))
+      let t = check_assign ty rt err false in
+      (t, SAssign(var, (t, e')))
     | CAssign(var, e) as ex ->
       let ty = type_of_identifier var globalvars localvars
       and (rt, e') = check_expr e globalvars localvars in

@@ -4,7 +4,7 @@
 open Ast
 %}
 
-%token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK ARROW
+%token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK LRBRACK ARROW
 %token BWAND BWOR PLUS MINUS TIMES DIVIDE MOD NOT ASSIGN
 %token EQ NEQ LT LEQ GT GEQ AND OR ASSERT
 %token NOELSE IF ELSE FOR WHILE CONTINUE BREAK
@@ -39,6 +39,7 @@ open Ast
 
 %nonassoc LPAREN LBRACK LBRACE
 %nonassoc RPAREN RBRACK RBRACE
+%left LRBRACK
 
 %%
 
@@ -54,12 +55,16 @@ basic_typ:
   | CHAR  { Char }
   | FLOAT { Float }
 
-typ:
+primitive_typ:
   | basic_typ       { $1 }
   | CONST basic_typ { Const($2) }
   /* arrays are only allowed on basic types */
-  | basic_typ LBRACK INT_LITERAL RBRACK   { Arr($1, $3) }
   | FUNC LPAREN typ_list RPAREN ARROW typ { Ftyp($6, $3) }
+
+typ:
+  // ndarray is not allowed
+  | primitive_typ LBRACK INT_LITERAL RBRACK   { Arr($1, $3) }
+  | primitive_typ LRBRACK { Darr($1) }
 
 /* type list is forced to be non-empty (use "void" as placeholder) */
 typ_list:

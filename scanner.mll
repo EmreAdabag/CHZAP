@@ -19,6 +19,7 @@ whitespace { token lexbuf }
 | '}' { RBRACE }
 | '[' { LBRACK }
 | ']' { RBRACK }
+| "[]" { LRBRACK }
 | ';' { SEMI }
 | ':' { COLON }
 | ',' { COMMA }
