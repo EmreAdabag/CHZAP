@@ -45,7 +45,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | A.String -> char_pt
     (* type checks are the job of semantics *)
     | A.Const(t) -> ltype_of_typ t
-    | A.Arr(_) -> raise (Failure ("Arr not implemented"))
+    | A.Arr(_) -> A.Arr(t, i) -> L.array_type (ltype_of_typ t) i
     | A.Ftyp(t, tl) -> 
       let ft = L.function_type (ltype_of_typ t) (Array.of_list (List.map ltype_of_typ tl)) in
       L.pointer_type ft
@@ -129,7 +129,21 @@ let translate (program : sstmt list) : Llvm.llmodule =
       addr *)
       L.build_global_stringptr s "_string" builder
     | SFloatLit(f)        -> L.const_float f64_t f
-    | SArrayLit(l)        -> raise (Failure ("Arr not implemented"))
+    | SArrayLit (sexprs) -> 
+      let size = List.length sexprs in
+      let ltype_of_arr = ltype_of_typ (fst(List.hd sexprs)) in
+      let all_emements = List.map (fun x -> build_expr globalvars localvars builder  x) sexprs in
+      let this_array = L.build_alloca (L.array_type ltype_of_arr size) "tmp" builder in
+      let rec range i j = if i >= j then [] else i :: (range (i+1) j) in
+      let index_list = range 0 size in
+      List.iter (fun x ->
+        let where = 
+          L.build_in_bounds_gep this_array [| L.const_int i32_t 0; L.const_int i32_t x |] "tmp" builder 
+        in
+        let what = List.nth all_emements x in
+        ignore (L.build_store what where builder)
+      ) index_list; L.build_load this_array "tmp" builder
+
     | SId(s)       -> L.build_load (addr_of_identifier s globalvars localvars) s builder
       (* let var = addr_of_identifier s globalvars localvars in
       ignore(print_endline (L.string_of_llvalue var));
@@ -178,7 +192,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
           | _ -> raise (Failure("impossible"))
         ) e1' e2' "tmp" builder
         ))
-      
+
     | SUnop(op, e) -> 
       let e' = build_expr globalvars localvars builder e in
       (match op with
