@@ -58,7 +58,7 @@ typ:
   | basic_typ       { $1 }
   | CONST basic_typ { Const($2) }
   /* arrays are only allowed on basic types */
-  | basic_typ LBRACK RBRACK   { Arr($1) }
+  | basic_typ LBRACK INT_LITERAL RBRACK   { Arr($1, $3) }
   | FUNC LPAREN typ_list RPAREN ARROW typ { Ftyp($6, $3) }
 
 /* type list is forced to be non-empty (use "void" as placeholder) */

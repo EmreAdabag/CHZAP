@@ -46,7 +46,8 @@ let check (program : stmt list) =
     (* regular *)
     | _ when lvaluet = rvaluet -> lvaluet 
     (* arrays *)
-    | _, Arr Void -> lvaluet
+    | _, Arr(Void, _) -> lvaluet
+    (* | _, Arr(Void, _) -> lvaluet *)
     (* error *)
     | _ -> raise (Failure err)
   in
@@ -114,7 +115,7 @@ let check (program : stmt list) =
     | FloatLit l -> (Float, SFloatLit l)
     | ArrayLit l -> 
       let res = match l with
-      | [] -> (Arr Void, SArrayLit [])          (* empty list literal *)
+      | [] -> (Arr(Void, 0), SArrayLit [])          (* empty list literal *)
       | hd::tl ->
           let typecheck typ expr = 
             let t, e' = check_expr expr globalvars localvars in
@@ -125,7 +126,8 @@ let check (program : stmt list) =
           in
           let hd_type, _ = check_expr hd globalvars localvars in
           let listcheck = typecheck hd_type in
-          (Arr hd_type, SArrayLit (List.map listcheck l))
+          let size = List.length tl + 1 in
+          (Arr(hd_type, size), SArrayLit (List.map listcheck l))
         in res
     | Id var -> (type_of_identifier var globalvars localvars, SId var)
     | Assign(var, e) as ex ->

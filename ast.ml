@@ -7,7 +7,7 @@ type uop = Not
 (* type ftyp = typ * typ list *)
 type typ = 
   | Int | Bool | Float | Char | String | Void 
-  | Arr of typ 
+  | Arr of typ * int
   | Const of typ 
   | Ftyp of typ * typ list
 
@@ -17,7 +17,6 @@ type infer_typ =
 
 (* int x: name binding *)
 type bind = Bind of typ * string
-
 
 type expr =
   | IntLit of int
@@ -97,7 +96,7 @@ let rec string_of_typ = function
   | Char -> "char"
   | String -> "string"
   | Float -> "float"
-  | Arr(t) -> string_of_typ t ^ "[]"
+  | Arr(t, s) -> string_of_typ t ^ "[" ^ (string_of_int s) ^ "]"
   | Const(t) ->"const " ^ string_of_typ t 
   | Void -> "void"
   | Ftyp(t, tl) -> "function (" ^ String.concat ", " 
