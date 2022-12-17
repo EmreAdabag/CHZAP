@@ -4,7 +4,7 @@
 
 let alpha = ['a'-'z' 'A'-'Z']
 let digit = ['0'-'9']
-let floatnumber = (digit+ '.' digit+)
+let floatnumber = ('-'? digit+ '.' digit+)
 let whitespace = [' ' '\r' '\t' '\n']
 
 
@@ -28,7 +28,6 @@ whitespace { token lexbuf }
 | '+' { PLUS }
 | '-' { MINUS }
 | '*' { TIMES }
-| "**" { EXP }
 | '/' { DIVIDE }
 | '%' { MOD }
 | '=' { ASSIGN }
@@ -52,6 +51,7 @@ whitespace { token lexbuf }
 | "continue" { CONTINUE }
 | "break" { BREAK }
 | "return" { RETURN }
+| "assert" { ASSERT }
 (* | "true" { TRUE }
 | "false" { FALSE } *)
 
@@ -59,21 +59,23 @@ whitespace { token lexbuf }
 (* types *)
 | "bool" { BOOL }
 | "char" { CHAR }
-| "uint" { UINT }
 | "int" { INT }
 | "float" { FLOAT }
 | "void" { VOID } 
 | "const" { CONST }
 | "function" { FUNC }
+| "auto"    { AUTO }
+| "const auto" { CONST_AUTO }
 
 
 (* literals *)
 | "true" { BOOL_LITERAL(true) }
 | "false" { BOOL_LITERAL(false) }
 | (alpha) (alpha | digit | '_')* as lit { ID(lit) }
-| digit+ as lit { INT_LITERAL(int_of_string lit) }
+| '-'? digit+ as lit { INT_LITERAL(int_of_string lit) }
 | floatnumber as lit { FLOAT_LITERAL(float_of_string lit) }
-| "'" ( _ as c) "'" { CHAR_LITERAL(c) }
+| "'" ( _ as c ) "'" { CHAR_LITERAL(c) }
+| "\"" ( [^'"']* as s ) "\"" { STRING_LITERAL(s) }
 
 | eof    { EOF }
 | _ as c { raise (Failure("illegal character " ^ Char.escaped c)) }

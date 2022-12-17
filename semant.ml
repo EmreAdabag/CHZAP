@@ -17,7 +17,6 @@ let check (program : stmt list) =
   let (locals : tbl_typ) = Hashtbl.create 1000 in
 
   (* Collect function declarations for built-in functions: no bodies *)
-  Hashtbl.add globals "print" (Ftyp(Int, [Int]));
 
   (* Return a variable from an input hash table *)
   let type_of_identifier (s : string) (globalvars : tbl_typ) (localvars : tbl_typ) : typ = 
@@ -33,6 +32,7 @@ let check (program : stmt list) =
     | Bind(x, _) :: t -> x :: types_of_binds t
   in
 
+
   (* Raise an exception if the given rvalue type cannot be assigned to
   the given lvalue type *)
   let check_assign (lvaluet : typ) (rvaluet : typ) (err : string) (is_bind : bool) : typ =
@@ -46,7 +46,8 @@ let check (program : stmt list) =
     (* regular *)
     | _ when lvaluet = rvaluet -> lvaluet 
     (* arrays *)
-    | _, Arr Void -> lvaluet
+    | _, Arr(Void, _) -> lvaluet
+    (* | _, Arr(Void, _) -> lvaluet *)
     (* error *)
     | _ -> raise (Failure err)
   in
@@ -71,6 +72,13 @@ let check (program : stmt list) =
       if Hashtbl.mem localvars id then raise(Failure ("duplicate variable declaration: " ^ id))
       else let _ = Hashtbl.add localvars id t in
       SBstmt(Bind(t, id))
+    | BAIstmt(t, id, e) -> 
+      let (t', _) = check_expr e globalvars localvars in
+      let b = (match t with
+        Const_auto -> Bind(Const(t'), id)
+        | _ -> Bind(t', id)
+      ) in
+      (check_stmt (BAstmt (b, e)) globalvars localvars Void)
     | BAstmt(b, e) -> 
       let Bind(t, id) = b in
       let _ = check_stmt (Bstmt(b)) globalvars localvars Void in
@@ -89,24 +97,25 @@ let check (program : stmt list) =
       SFor(ss, check_expr e2 globalvars localvars, check_expr e3 globalvars localvars, check_stmt st globalvars localvars rettyp)
     | Continue -> SContinue
     | Break -> SBreak
+    | Assert(e) -> SAssert(check_bool_expr e globalvars localvars)
     | Func(b, bl, s) as f -> check_func f globalvars localvars
     | Return e -> 
       let (t, e') = check_expr e globalvars localvars in
       if t = rettyp then SReturn (t, e')
       else raise (Failure ("return gives " ^ string_of_typ t ^ " expected " ^
                   string_of_typ rettyp ^ " in " ^ string_of_expr e))
-      (* TODO: need to check that return val matches declared return val ? maybe done*)
 
   (* Return a semantically-checked expression, i.e., with a type *)
-  and check_expr (ex : expr) (globalvars : tbl_typ) (localvars : tbl_typ) =
+  and check_expr (ex : expr) (globalvars : tbl_typ) (localvars : tbl_typ) : sexpr =
     match ex with
     | IntLit l -> (Int, SIntLit l)
     | BoolLit l -> (Bool, SBoolLit l)
     | CharLit l -> (Char, SCharLit l)
+    | StringLit l -> (String, SStringLit l)
     | FloatLit l -> (Float, SFloatLit l)
-    | ArrayLit (l,size) -> 
+    | ArrayLit l -> 
       let res = match l with
-      | [] -> (Arr Void, SArrayLit [])          (* empty list literal *)
+      | [] -> (Arr(Void, 0), SArrayLit [])          (* empty list literal *)
       | hd::tl ->
           let typecheck typ expr = 
             let t, e' = check_expr expr globalvars localvars in
@@ -117,7 +126,8 @@ let check (program : stmt list) =
           in
           let hd_type, _ = check_expr hd globalvars localvars in
           let listcheck = typecheck hd_type in
-          (Arr (hd_type,size), SArrayLit (List.map listcheck l,size))
+          let size = List.length tl + 1 in
+          (Arr(hd_type, size), SArrayLit (List.map listcheck l))
         in res
     | Id var -> (type_of_identifier var globalvars localvars, SId var)
     | Assign(var, e) as ex ->
@@ -156,7 +166,7 @@ let check (program : stmt list) =
       if t1 = t2 then
         (* Determine expression type based on operator and operand types *)
         let t = match op with
-            Add | Sub | Mul | Div | Mod | BWAnd | BWOr | Exp when t1 = Int -> Int
+            Add | Sub | Mul | Div | Mod | BWAnd | BWOr when t1 = Int -> Int
           | Add | Sub | Mul | Div when t1 = Float -> Float
           | Eq | Neq | Less | Greater | Geq | Leq when t1 = Int || t1 = Float || t1 = Bool -> Bool
           | And | Or when t1 = Bool -> Bool
@@ -165,7 +175,7 @@ let check (program : stmt list) =
         (t, SBinop((t1, e1'), op, (t2, e2')))
       else
         let t = match op with
-          Add | Sub | Mul | Div | Exp when t1 = Float && t2 = Int -> Float
+          Add | Sub | Mul | Div when t1 = Float && t2 = Int -> Float
           | Add | Sub | Mul | Div when t1 = Int && t2 = Float -> Float
           | Eq | Neq | Less | Greater | Geq | Leq when 
             (t1 = Int || t1 = Float || t1 = Bool) && (t2 = Int || t2 = Float || t2 = Bool) -> Bool
@@ -190,25 +200,30 @@ let check (program : stmt list) =
     |  _ -> raise (Failure ("expected Boolean expression in " ^ string_of_expr e))
 
   and check_call fname args call globalvars localvars = 
-    let ty = 
-      if Hashtbl.mem localvars fname then Hashtbl.find localvars fname
-      else if Hashtbl.mem globalvars fname then Hashtbl.find globalvars fname
-      else raise (Failure ("unrecognized function " ^ fname)) 
-    in
-      match ty with
-      | Ftyp(rt, tl) -> 
-        if List.length args != List.length tl then 
-          raise (Failure ("expecting " ^ string_of_int (List.length args) ^
-          " arguments in " ^ string_of_expr call))
-        else let check_c ft e =
-          let (et, e') = check_expr e globalvars localvars in
-          let err = "illegal argument found " ^ string_of_typ et ^
-                    " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
-          in (check_assign ft et err false, e')
-        in
-        let args' = List.map2 check_c tl args
-        in (rt, SCall(fname, args'))
-      | _ -> raise(Failure "invalid call")
+      match fname with
+      | "print" -> 
+          let sargs = List.map (fun e -> check_expr e globalvars localvars) args in
+          (Int, SCall("print", sargs))
+      | _ ->
+        let ty = 
+          if Hashtbl.mem localvars fname then Hashtbl.find localvars fname
+          else if Hashtbl.mem globalvars fname then Hashtbl.find globalvars fname
+          else raise (Failure ("unrecognized function " ^ fname)) 
+        in 
+          match ty with
+          | Ftyp(rt, tl) -> 
+            if List.length args != List.length tl then 
+              raise (Failure ("expecting " ^ string_of_int (List.length args) ^
+              " arguments in " ^ string_of_expr call))
+            else let check_c ft e =
+              let (et, e') = check_expr e globalvars localvars in
+              let err = "illegal argument found " ^ string_of_typ et ^
+                        " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
+              in (check_assign ft et err false, e')
+            in
+            let args' = List.map2 check_c tl args
+            in (rt, SCall(fname, args'))
+          | _ -> raise(Failure "invalid call")
 
   (* return semantically checked function *)
   and check_func func (globalvars : tbl_typ) (localvars : tbl_typ) : sstmt =
@@ -231,7 +246,7 @@ let check (program : stmt list) =
     let _ = Hashtbl.iter add_fn localvars in
     (* create local scope and fill with formals, locally scoped vars can't be redefined but globals can *)
     let locals = Hashtbl.create 1000 in
-    let _ = List.map (fun (Bind(ty, name)) -> Hashtbl.add locals name ty) formals in
+    let _ = List.map (fun (Bind((ty : typ), name)) -> Hashtbl.add locals name ty) formals in
     check_stmt body globals locals rt
 
   in check_stmt_list program globals locals Void 
