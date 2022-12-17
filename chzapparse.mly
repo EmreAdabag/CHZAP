@@ -55,16 +55,13 @@ basic_typ:
   | CHAR  { Char }
   | FLOAT { Float }
 
-primitive_typ:
+typ:
   | basic_typ       { $1 }
   | CONST basic_typ { Const($2) }
   /* arrays are only allowed on basic types */
+  | basic_typ LBRACK INT_LITERAL RBRACK { Arr($1, $3) }
+  | basic_typ LRBRACK { Darr($1) }
   | FUNC LPAREN typ_list RPAREN ARROW typ { Ftyp($6, $3) }
-
-typ:
-  // ndarray is not allowed
-  | primitive_typ LBRACK INT_LITERAL RBRACK   { Arr($1, $3) }
-  | primitive_typ LRBRACK { Darr($1) }
 
 /* type list is forced to be non-empty (use "void" as placeholder) */
 typ_list:

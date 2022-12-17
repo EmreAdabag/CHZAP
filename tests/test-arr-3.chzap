@@ -5,10 +5,9 @@ int[2] get_arr() {
     return arr;
 }
 
-/*int[] get_darr() {
-    int[] arr = [1, 2];
-    return arr;
-}*/
+int size(int[] arr) {
+    return 0;
+}
 
 int[2] a = get_arr();
-//int[] da = get_darr();
+int s = size(a);
