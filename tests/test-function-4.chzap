@@ -8,10 +8,18 @@ int sum(int a, int b, function(int, int) -> int f) {
     return f(a, b);
 }
 
-function(char) -> int func_decl;
-
 int a = 3;
 int b = 5;
 int s1 = sum(a, b, add);
-int s2 = sum(a, b, function(int x, int y) -> int { return x + y; });
-// there must be a new line at the end of file
+int s2 = sum(a, b, function(int x, int y) -> int { return x - y; });
+
+//int[] arr;
+int sth = -2;
+//int size(int[] arr) -> int;
+
+assert true;
+assert s1 == 8;
+
+print("s1 =", s1, ", s2 =", s2);
+// throw
+assert s2 == -2;
