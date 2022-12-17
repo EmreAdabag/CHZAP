@@ -45,7 +45,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
     | A.String -> char_pt
     (* type checks are the job of semantics *)
     | A.Const(t) -> ltype_of_typ t
-    | A.Arr(_) -> A.Arr(t, i) -> L.array_type (ltype_of_typ t) i
+    | A.Arr(t, i) -> L.array_type (ltype_of_typ t) i
     | A.Ftyp(t, tl) -> 
       let ft = L.function_type (ltype_of_typ t) (Array.of_list (List.map ltype_of_typ tl)) in
       L.pointer_type ft
