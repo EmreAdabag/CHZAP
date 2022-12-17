@@ -14,7 +14,7 @@ and sx =
   | SBinop of sexpr * op * sexpr
   | SUnop of uop * sexpr
   | SAssign of string * sexpr
-  | SSubscription of string * sexpr
+  | SSubscription of sexpr * sexpr
   (*S function call *)
   | SCall of string * sexpr list
   | SNoexpr
@@ -67,7 +67,7 @@ let rec string_of_sexpr (t, e) =
       | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e
       | SCall(f, el) ->
           f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
-      | SSubscription(a, e) -> a ^ "[" ^ string_of_sexpr e ^ "]" 
+      | SSubscription(a, e) -> string_of_sexpr a ^ "[" ^ string_of_sexpr e ^ "]" 
       | SNoexpr -> ""
       | SAfunc(t, bl, s) -> "lambda: " ^ string_of_typ t ^ " (" ^ String.concat ", " 
         (List.map string_of_bind bl) ^ ") {\n" ^ string_of_sstmt s ^ "}"

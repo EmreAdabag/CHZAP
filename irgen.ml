@@ -143,7 +143,34 @@ let translate (program : sstmt list) : Llvm.llmodule =
         let what = List.nth all_emements x in
         ignore (L.build_store what where builder)
       ) index_list; L.build_load this_array "tmp" builder
-
+    | SSubscription(exp0, exp) ->
+				(match exp0 with
+					  (_, SId s) -> let array_llvalue = addr_of_identifier s globalvars localvars in
+							let where = L.build_in_bounds_gep array_llvalue [| L.const_int i32_t 0;( build_expr globalvars localvars builder  exp) |] "tmp" builder in
+							let array_load = L.build_load where "tmp" builder in array_load
+            | str -> (let s_llvalue = 
+                (try match str with
+                  
+                      A.Int-> let struct_llvalue = addr_of_identifier s globalvars localvars in struct_llvalue
+                      | _ -> raise (Failure("not found"))
+                    with Not_found -> raise (Failure(s ^ "not found"))
+                  | _ -> raise (Failure("lhs not found")))
+                in
+							
+		
+							let the_element =  build_expr globalvars localvars builder  str in
+							let the_element_lltype = L.type_of the_element in
+							let the_element_opt = L.struct_name the_element_lltype in
+							let the_element_name = (match the_element_opt with 
+													  None -> ""
+													| Some(s) -> s)
+							in 
+							let indices = StringMap.find the_element_name struct_element_index in
+							let index = StringMap.find element indices in
+							let array_llvalue = L.build_struct_gep s_llvalue index "tmp" builder in
+							let where = L.build_in_bounds_gep array_llvalue [| L.const_int i32_t 0;( build_expr globalvars localvars builder  exp) |] "tmp" builder in
+							let array_load = L.build_load where "tmp" builder in array_load)
+					| _ -> raise(Failure("not an array")))
     | SId(s)       -> L.build_load (addr_of_identifier s globalvars localvars) s builder
       (* let var = addr_of_identifier s globalvars localvars in
       ignore(print_endline (L.string_of_llvalue var));
