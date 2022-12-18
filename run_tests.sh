@@ -3,7 +3,7 @@
 ocamlbuild -pkgs llvm chzap.native
 
 rm -rfv log/* 
-for file in `find . -path "*/tests/test-function-*" -name "*.chzap"` ; do
+for file in `find . -path "*/tests/*" -name "*.chzap"` ; do
     f="$(basename -- $file)"
     echo -n "running $f ... "
     filename="${f%.*}"
