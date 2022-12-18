@@ -211,7 +211,11 @@ let translate (program : sstmt list) : Llvm.llmodule =
         let e' = build_expr globalvars localvars builder e in
         let v = addr_of_identifier var globalvars localvars in
         ignore(L.build_store e' v builder); e')
-    | SSubscription(_, _) -> raise (Failure ("TODO"))
+    | SSubscription(n, e) -> 
+      let idx = build_expr globalvars localvars builder e in
+      let addr = addr_of_identifier n globalvars localvars in
+      let p = L.build_gep addr [| L.const_int i32_t 0; idx |] "tmp" builder in
+      L.build_load p "elem" builder
 
     (* | SCall ("print", [(typ, _) as e]) ->
       let t = remove_const typ in
