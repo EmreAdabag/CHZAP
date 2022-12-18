@@ -5,13 +5,3 @@ int add(int a, int b) {
 }
 
 int s = add(1, 2);
-function(int, int) -> int f;
-f = add;
-
-print(f(1, 2));
-print(1.15);
-print("Hiii~");
-
-print("Hello ", 1, 2, 3.5, " Hi");
-
-assert false;

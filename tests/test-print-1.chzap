@@ -1,0 +1,5 @@
+/* CHZAP print */
+
+print(1.15);
+print("Hiii~");
+print("Hello", 1, 2, 3.5, "Hi");
