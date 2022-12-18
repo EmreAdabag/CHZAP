@@ -25,13 +25,15 @@ for file in `find . -path "*/tests/test-function-*" -name "*.chzap"` ; do
     echo "$program_output">>log/$filename.log
 
     ##catch err
-    if [[ $f == "error*" ^ $code!=0 ]]
+    [ $f == error* ]
+    exp=$?
+    [ $code -ne 0 ]
+    ret=$?
+    if [[ $exp -ne $ret ]]
     then
-        info_output="err"
-        >&2 echo $info_output
+        echo "failed"
     else
-        info_output="yes"
-        echo $info_output
+        echo "passed"
     fi
 
     ##write to all
