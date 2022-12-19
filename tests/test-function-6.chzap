@@ -1,3 +1,10 @@
 /* CHZAP functions */
 
-assert false;
+int compute(int a, int b, function(int,int)->int op) {
+    return op(a, b);
+}
+
+assert compute(1, 1, function(int a, int b)->int { return a + b; }) == 2;
+assert compute(1, 1, function(int a, int b)->int { return a - b; }) == 0;
+assert compute(1, 1, function(int a, int b)->int { return a * b; }) == 1;
+assert compute(1, 1, function(int a, int b)->int { return a / b; }) == 1;

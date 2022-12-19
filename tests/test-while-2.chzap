@@ -2,7 +2,10 @@
 
 int a = 1;
 int b = 4;
+int cnt = 0;
 while (a <= b) {
+    cnt = cnt + 1;
+    if (cnt > 1000) break;
     if (a > 3) continue;
     a = a + 1;
 }

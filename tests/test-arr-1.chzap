@@ -1,4 +1,4 @@
 /* CHZAP arrays */
 
-int[] arr;
+int[3] arr;
 arr = [1, 2, 3];

@@ -15,3 +15,5 @@ _build/
 *.out
 *.log
 *.ll
+*.s
+*.o
