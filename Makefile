@@ -14,5 +14,5 @@ clean :
 	rm -rf ocamlllvm *.diff
 	rm -rf \
 	*.cmi *.cmo chzapparse.ml chzapparse.mli chzapparse.output scanner.ml \
-        repl.out repl *.out __pycache__ _build chzap.native \
+        repl.out repl *.out __pycache__ _build log/_build chzap.native \
 	*.ll *.exe *.s *.o testall.log

@@ -1,0 +1,15 @@
+/* CHZAP in one-slide */
+
+int collatz(int x) {
+	if(x == 1) { return 1; }
+	if((x & 1) == 0) {
+		return x / 2;
+	}
+	else {
+		return 3 * x + 1;
+	}
+}
+
+// anonymous & higher-order functions & type inference
+auto twice = function(function(int)->int f, int x) -> int { return f(f(x)); };
+print(twice(collatz, 3));		// 5
