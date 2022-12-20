@@ -326,8 +326,8 @@ let translate (program : sstmt list) : Llvm.llmodule =
       build_stmt globalvars localvars builder the_function loop ( 
         SBlock [
           e1 ; 
-          SIf(e2, body, SBlock([])); 
-          SWhile (e2, SBlock [SExpr e3; body]) 
+          (* SIf(e2, body, SBlock([]));  *)
+          SWhile (e2, SBlock [body ; SExpr e3]) 
         ])
 
     | SWhile (predicate, body) ->
