@@ -1,10 +1,25 @@
-# ocamlbuild test_parser.native            
-# ocamlbuild test_semantic.native
-ocamlbuild -pkgs llvm chzap.native
+echo ""
+echo "Running Tests..."
+
+echo ""
+echo "Clearing:"
 
 rm -rfv log/*
 mkdir log/_build
+
+echo ""
+echo "Building:"
+# ocamlbuild test_parser.native            
+# ocamlbuild test_semantic.native
+ocamlbuild -pkgs llvm chzap.native
 gcc -c lib.c -o log/_build/lib.o
+
+echo ""
+echo "Testing:"
+
+cnt=0
+pass=0
+fail=0
 
 for file in `find . -path "*/tests/*" -name "*.chzap"` ; do
     f="$(basename -- $file)"
@@ -43,8 +58,10 @@ for file in `find . -path "*/tests/*" -name "*.chzap"` ; do
     exp=$?
     if [[ $exp == $code ]]
     then
+        fail=$((fail+1))
         echo "failed"
     else
+        pass=$((pass+1))
         echo "passed"
     fi
 
@@ -61,4 +78,9 @@ for file in `find . -path "*/tests/*" -name "*.chzap"` ; do
     echo "">>log/all.log
     echo "program_output:">>log/all.log
     echo "$program_output">>log/all.log
+
+    cnt=$((cnt+1))
 done
+
+echo ""
+echo "Summary: $cnt tests conducted: $pass passed, $fail failed"
