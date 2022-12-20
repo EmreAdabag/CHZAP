@@ -1,0 +1,9 @@
+/* CHZAP functions */
+
+// the 2nd arugument is a function
+// it takes an integer and returns a boolean
+bool check_number(int x, function(int) -> bool f){
+		return(f(x));
+}
+
+assert check_number(1, function(int x) -> bool { return x < 10; });  // true

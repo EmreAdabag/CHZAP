@@ -1,0 +1,12 @@
+/* CHZAP functions */
+
+int power(int x, int y) {
+		int tot = 1;
+		roll(int i = 0; i < y; i = i + 1) {
+				tot = tot * x;
+		}
+        return tot;
+}
+
+assert power(3, 3) == 27;
+print(power(2, 3));                 // 8

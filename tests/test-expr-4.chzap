@@ -1,0 +1,7 @@
+/* CHZAP expr */
+
+bool my_bool = true;
+char my_char = 'a';
+
+int[3] my_int_array;
+my_int_array = [1,2,3];

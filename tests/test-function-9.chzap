@@ -1,0 +1,4 @@
+/* CHZAP functions */
+
+// this is an anonymous function (expression)
+function(int x) -> int { return x + 1; };

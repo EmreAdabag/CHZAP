@@ -1,0 +1,12 @@
+/* CHZAP exprs */
+
+bool my_bool = true;
+
+my_bool = false;      // OK
+my_bool = 2;          // NOT OK
+
+// comments can be left like this
+/* or this */
+
+const int i = 1;     // define and initialize
+i = 0;               // error: illegal assignment

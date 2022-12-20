@@ -1,0 +1,15 @@
+/* CHZAP forloops */
+
+int x = 0;
+int y = 8;
+
+// equivalent to for in C
+roll(int i = 0; i < 10; i = i + 1) {
+		if(x > y) {
+				print("CHZAP!", "i =", i);  // you can print to the terminal like this
+				break;
+		}
+		else {
+				x = x + 1;
+		}
+}

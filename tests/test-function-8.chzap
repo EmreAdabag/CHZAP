@@ -1,0 +1,8 @@
+/* CHZAP functions */
+
+// declare a function that takes a character and returns an integer
+function(char) -> int ctoi; 
+
+// type-list must be non-empty for declarations
+// void can be used as a placeholder
+function(void) -> float rand;
