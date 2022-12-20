@@ -3,5 +3,5 @@
 auto c = 'c';                       // char
 auto s = 2 + 3;                     // int
 auto f = function(int x) {          // function(int)->void
-		print("This is an int:", x);
+		bark("This is an int:", x);
 };

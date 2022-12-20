@@ -20,6 +20,6 @@ int sth = -2;
 assert true;
 assert s1 == 8;
 
-print("s1 =", s1, ", s2 =", s2);
+bark("s1 =", s1, ", s2 =", s2);
 // throw
 assert s2 == -2;

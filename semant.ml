@@ -203,9 +203,9 @@ let check (program : stmt list) =
 
   and check_call fname args call globalvars localvars = 
       match fname with
-      | "print" -> 
+      | "bark" -> 
           let sargs = List.map (fun e -> check_expr e globalvars localvars) args in
-          (Int, SCall("print", sargs))
+          (Int, SCall("bark", sargs))
       | _ ->
         let ty = 
           if Hashtbl.mem localvars fname then Hashtbl.find localvars fname
