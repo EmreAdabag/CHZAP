@@ -113,7 +113,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
   (* build print *)
   let rec build_print fmt sexpr globals locals builder = 
     let fmtp = L.build_global_stringptr fmt "fmt" builder in
-    L.build_call printf_func [| fmtp ; build_expr globals locals builder sexpr |] "print" builder
+    L.build_call printf_func [| fmtp ; build_expr globals locals builder sexpr |] "bark" builder
 
   (* build function arguments *)
   and build_arg globals locals builder = function
@@ -229,7 +229,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
       | _ -> raise (Failure ("Print type " ^ Ast.string_of_typ typ ^ " not suppoted"))
       ) *)
 
-    | SCall ("print", args) ->
+    | SCall ("bark", args) ->
       (match args with
       | [] -> build_print "%c" (String, SCharLit('\n')) globalvars localvars builder
       | ((typ, _) as e) :: el -> 
@@ -240,7 +240,7 @@ let translate (program : sstmt list) : Llvm.llmodule =
           | String -> build_print "%s" e globalvars localvars builder
           | _ -> raise (Failure ("Print type " ^ Ast.string_of_typ typ ^ "not suppoted")));
         ignore(build_print "%c" (String, SCharLit(' ')) globalvars localvars builder);
-        build_expr globalvars localvars builder (A.Void, SCall("print", el)))
+        build_expr globalvars localvars builder (A.Void, SCall("bark", el)))
 
     | SCall(f, args) -> 
       (* ignore(print_endline f); *)

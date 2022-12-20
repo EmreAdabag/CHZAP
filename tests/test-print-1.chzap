@@ -1,5 +1,5 @@
-/* CHZAP print */
+/* CHZAP bark */
 
-print(1.15);
-print("Hiii~");
-print("Hello", 1, 2, 3.5, "Hi");
+bark(1.15);
+bark("Hiii~");
+bark("Hello", 1, 2, 3.5, "Hi");
