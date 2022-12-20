@@ -8,7 +8,7 @@ echo $filename
 rm -rfv log/_build
 mkdir log/_build
 
-ocamlbuild -pkgs llvm chzap.ml
+ocamlbuild -pkgs llvm chzap.native
 ./chzap.native $1 > log/$filename.ll
 llc -march=$2 log/$filename.ll -o log/_build/$filename.s
 gcc -c lib.c -o log/_build/lib.o
