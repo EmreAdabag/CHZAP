@@ -106,6 +106,7 @@ stmt:
   | RETURN expr_opt SEMI { Return($2) }
   // func def
   | typ ID LPAREN formals_list RPAREN stmt { Func(Bind($1, $2), $4, $6) }
+  | ID LPAREN formals_list RPAREN stmt { Func(Bind(Void, $1), $3, $5) }
 
 
 expr_opt:
@@ -142,7 +143,8 @@ expr:
    /* call */
   | ID LPAREN args_opt RPAREN { Call ($1, $3) }
   /* anonymous */
-  | FUNC LPAREN formals_list RPAREN ARROW typ LBRACE stmt RBRACE { Afunc($6, $3, $8) }
+  | FUNC LPAREN formals_list RPAREN ARROW typ stmt { Afunc($6, $3, $7) }
+  | FUNC LPAREN formals_list RPAREN stmt { Afunc(Void, $3, $5) }
 
 args_opt:
   | /*nothing*/ { [] }

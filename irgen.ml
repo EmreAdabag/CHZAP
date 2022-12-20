@@ -277,7 +277,12 @@ let translate (program : sstmt list) : Llvm.llmodule =
       (* build stmt *)
       let rbuilder = build_stmt globals locals fbuilder the_function None s in
       (* add return if not: void *)
-      ignore(add_terminal rbuilder (L.build_ret (L.const_int (ltype_of_typ rt) 0)));
+      let instr = 
+        match rt with
+        | A.Void -> L.build_ret_void
+        | _ -> L.build_ret (L.const_int (ltype_of_typ rt) 0)
+      in
+      ignore(add_terminal rbuilder instr);
       (* return the function *)
       the_function
       (* fp *)
@@ -418,7 +423,12 @@ let translate (program : sstmt list) : Llvm.llmodule =
       (* build stmt *)
       let rbuilder = build_stmt globals locals fbuilder the_function loop s in
       (* add return if not: void *)
-      ignore(add_terminal rbuilder (L.build_ret (L.const_int (ltype_of_typ rt) 0)));
+      let instr = 
+        match rt with
+        | A.Void -> L.build_ret_void
+        | _ -> L.build_ret (L.const_int (ltype_of_typ rt) 0)
+      in
+      ignore(add_terminal rbuilder instr);
       (* return the original builder *)
       builder
 
