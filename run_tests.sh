@@ -40,7 +40,7 @@ for file in `find . -path "*/tests/*" -name "*.chzap"` ; do
     echo -e "$ir_output" > log/$filename.ll
     echo "">>log/$filename.log
     echo "---------ir_output---------">>log/$filename.log
-    echo "$program_output">>log/$filename.log
+    echo "$ir_output">>log/$filename.log
 
     program_output=$(
         llc log/$filename.ll -o log/_build/$filename.s  2>&1 && 
