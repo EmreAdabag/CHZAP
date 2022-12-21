@@ -327,26 +327,33 @@ let translate (program : sstmt list) : Llvm.llmodule =
       ignore(L.build_cond_br bool_val then_bb else_bb builder);
       L.builder_at_end context end_bb
 
-    | SFor (e1, e2, e3, body) -> 
+    | SFor (init, predicate, acc, body) -> 
       build_stmt globalvars localvars builder the_function loop ( 
         SBlock [
-          e1 ; 
-          (* SIf(e2, body, SBlock([]));  *)
-          SWhile (e2, SBlock [body ; SExpr e3]) 
-        ])
+          init ; 
+          SWhile (predicate, body, Some(SExpr acc)) 
+        ])  
 
-    | SWhile (predicate, body) ->
+    | SWhile (predicate, body, accumulate) ->
       let while_bb = L.append_block context "while" the_function in
       let build_br_while = L.build_br while_bb in (* partial function *)
       ignore (build_br_while builder);
       let while_builder = L.builder_at_end context while_bb in
       let bool_val = build_expr globalvars localvars while_builder predicate in
       let body_bb = L.append_block context "while_body" the_function in
+      let acc_bb = L.append_block context "while_acc" the_function in
       let end_bb = L.append_block context "while_end" the_function in
-      
-      let new_builder = build_stmt globalvars localvars (L.builder_at_end context body_bb) the_function (Some(while_bb, end_bb)) body in
-      add_terminal (new_builder) build_br_while; 
-      
+
+      (match accumulate with 
+        Some(accumulate) -> 
+          let acc_builder = build_stmt globalvars localvars (L.builder_at_end context acc_bb) the_function (Some(acc_bb, end_bb)) accumulate in
+          add_terminal (acc_builder) build_br_while; 
+          let new_builder = build_stmt globalvars localvars (L.builder_at_end context body_bb) the_function (Some(acc_bb, end_bb)) body in
+          add_terminal (new_builder) (L.build_br acc_bb); 
+        | None ->
+          let new_builder = build_stmt globalvars localvars (L.builder_at_end context body_bb) the_function (Some(while_bb, end_bb)) body in
+          add_terminal (new_builder) build_br_while; 
+         );
       ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
       L.builder_at_end context end_bb
     | SContinue -> 
