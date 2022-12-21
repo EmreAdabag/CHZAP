@@ -29,7 +29,7 @@ and sstmt =
   | SExpr of sexpr
   | SIf of sexpr * sstmt * sstmt
   | SFor of sstmt * sexpr * sexpr * sstmt 
-  | SWhile of sexpr * sstmt
+  | SWhile of sexpr * sstmt * sstmt option
   | SContinue
   | SBreak
   | SAssert of sexpr
@@ -83,7 +83,7 @@ and string_of_sstmt = function
   | SReturn(expr) -> "return " ^ string_of_sexpr expr ^ ";\n"
   | SIf(e, s1, s2) ->  "if (" ^ string_of_sexpr e ^ ")\n" ^
                        string_of_sstmt s1 ^ "else\n" ^ string_of_sstmt s2
-  | SWhile(e, s) -> "while (" ^ string_of_sexpr e ^ ") " ^ string_of_sstmt s
+  | SWhile(e, s, a) -> "while (" ^ string_of_sexpr e ^ ") " ^ string_of_sstmt s
   | SFor(s1, e2, e3, s) -> 
     "roll (" ^ string_of_sstmt s1 ^ "; " ^ string_of_sexpr e2 ^ "; " ^ 
     string_of_sexpr e3 ^ ") " ^ string_of_sstmt s

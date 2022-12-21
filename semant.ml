@@ -92,7 +92,7 @@ let check (program : stmt list) =
     | If(e, st1, st2) ->
       SIf(check_bool_expr e globalvars localvars, check_stmt st1 globalvars localvars rettyp, check_stmt st2 globalvars localvars rettyp)
     | While(e, st) ->
-      SWhile(check_bool_expr e globalvars localvars, check_stmt st globalvars localvars rettyp)
+      SWhile(check_bool_expr e globalvars localvars, check_stmt st globalvars localvars rettyp, None)
     | For(s1, e2, e3, st) ->
       let ss = check_stmt s1 globalvars localvars Void in
       SFor(ss, check_expr e2 globalvars localvars, check_expr e3 globalvars localvars, check_stmt st globalvars localvars rettyp)
