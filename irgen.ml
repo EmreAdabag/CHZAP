@@ -341,11 +341,11 @@ let translate (program : sstmt list) : Llvm.llmodule =
       let while_builder = L.builder_at_end context while_bb in
       let bool_val = build_expr globalvars localvars while_builder predicate in
       let body_bb = L.append_block context "while_body" the_function in
-      let acc_bb = L.append_block context "while_acc" the_function in
       let end_bb = L.append_block context "while_end" the_function in
 
       (match accumulate with 
         Some(accumulate) -> 
+          let acc_bb = L.append_block context "while_acc" the_function in
           let acc_builder = build_stmt globalvars localvars (L.builder_at_end context acc_bb) the_function (Some(acc_bb, end_bb)) accumulate in
           add_terminal (acc_builder) build_br_while; 
           let new_builder = build_stmt globalvars localvars (L.builder_at_end context body_bb) the_function (Some(acc_bb, end_bb)) body in
