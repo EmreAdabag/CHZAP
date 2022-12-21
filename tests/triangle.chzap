@@ -1,0 +1,31 @@
+int triangle( function(int, int , int)->int calc_next ) 
+{
+    auto n=10;
+    bark("in function!");
+    auto coef = 1;
+    
+    roll(int i=0; i<n; i=i+1)
+    {
+        auto j = 0;
+        while(true){
+            if (j  > i)
+                {break;}
+            
+            if (j==0 || i==0)
+               { coef = 1;}
+            else
+               { coef = calc_next(i,j,coef);}
+
+            bark(coef);
+            j = j + 1;
+        }
+       
+        bark(" -- ");
+    }
+
+    return 0;
+
+}
+
+
+int n = triangle(function(int a, int b, int c)->int { return c*(a-b+1)/b; });

@@ -17,3 +17,6 @@ _build/
 *.ll
 *.s
 *.o
+triangle
+one_slide
+test-forloop-4

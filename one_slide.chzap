@@ -12,4 +12,4 @@ int collatz(int x) {
 
 // anonymous & higher-order functions & type inference
 auto twice = function(function(int)->int f, int x) -> int { return f(f(x)); };
-print(twice(collatz, 3));		// 5
+bark(twice(collatz, 3));		// 5
