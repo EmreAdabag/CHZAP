@@ -56,7 +56,7 @@ basic_typ:
   | FLOAT { Float }
 
 typ:
-  | basic_typ       { $1 }
+  | basic_typ %prec ASSIGN { $1 }
   | CONST basic_typ { Const($2) }
   /* arrays are only allowed on basic types */
   | basic_typ LBRACK INT_LITERAL RBRACK { Arr($1, $3) }
@@ -80,8 +80,12 @@ stmt_list:
 bind:
   | typ ID { Bind($1, $2) }
 
+formals_opt:
+  | /* empty */  { [] }
+  | formals_list { $1 }
+
 formals_list:
-  | /* empty */ { [] }
+  // | /* empty */ { [] }
   | bind { [$1] }
   | bind COMMA formals_list { $1 :: $3 }
 
@@ -105,8 +109,8 @@ stmt:
   | ASSERT expr SEMI { Assert($2) }
   | RETURN expr_opt SEMI { Return($2) }
   // func def
-  | typ ID LPAREN formals_list RPAREN stmt { Func(Bind($1, $2), $4, $6) }
-  | ID LPAREN formals_list RPAREN stmt { Func(Bind(Void, $1), $3, $5) }
+  | typ ID LPAREN formals_opt RPAREN stmt { Func(Bind($1, $2), $4, $6) }
+  | VOID ID LPAREN formals_opt RPAREN stmt { Func(Bind(Void, $2), $4, $6) }
 
 
 expr_opt:
@@ -143,8 +147,8 @@ expr:
    /* call */
   | ID LPAREN args_opt RPAREN { Call ($1, $3) }
   /* anonymous */
-  | FUNC LPAREN formals_list RPAREN ARROW typ stmt { Afunc($6, $3, $7) }
-  | FUNC LPAREN formals_list RPAREN stmt { Afunc(Void, $3, $5) }
+  | FUNC LPAREN formals_opt RPAREN ARROW typ stmt { Afunc($6, $3, $7) }
+  | FUNC LPAREN formals_opt RPAREN stmt { Afunc(Void, $3, $5) }
 
 args_opt:
   | /*nothing*/ { [] }
